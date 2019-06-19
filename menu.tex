@@ -1,0 +1,106 @@
+\documentclass[12pt]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[textwidth=12cm,centering]{geometry}
+\usepackage[x11names]{xcolor}
+\usepackage{background}
+
+\newcommand*\wb[3]{%
+  {\fontsize{#1}{#2}\usefont{U}{webo}{xl}{n}#3}}
+
+% The page frame
+\SetBgColor{Goldenrod3}
+\SetBgAngle{0}
+\SetBgScale{1}
+\SetBgOpacity{1}
+\SetBgContents{%
+\begin{tikzpicture}
+\node at (0.5\paperwidth,0) {\wb{80}{34}{E}\rule[60pt]{.2\textwidth}{0.4pt}%
+  \raisebox{55pt}{%
+  \makebox[.6\textwidth]{\ \fontsize{24}{29}\selectfont\scshape Bei Alfredo }}%
+  \rule[60pt]{.2\textwidth}{0.4pt}\wb{80}{34}{F}};
+\node at (2,-0.5\textheight) {\rule{0.4pt}{.8\textheight}};
+\node at (19.5,-0.5\textheight) {\rule{0.4pt}{.8\textheight}};
+\node at (0.5\paperwidth,-\textheight) {\wb{80}{34}{G}\rule[-10pt]{\textwidth}{0.4pt}\wb{80}{34}{H}} ;
+\end{tikzpicture}%
+}
+
+% colorize text
+\newcommand*\ColText[1]{\textcolor{Goldenrod3}{#1}}
+
+% a tabular* for each food group
+\newenvironment{Group}[1]
+  {\noindent\begin{tabular*}{\textwidth}{@{}p{.8\linewidth}@{\extracolsep{\fill}}r@{}}
+    {\fontsize{24}{29}\selectfont\ColText{#1}}\\[0.8em]}
+  {\end{tabular*}}
+
+% to format each entry
+\newcommand*\Entry[2]{%
+  \sffamily#1 & #2}
+
+% to format each subentry
+\newcommand*\Expl[1]{%
+  \hspace*{1em}\footnotesize #1}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{Group}{Pizza}
+\Entry{P2}{5,00} \\
+\Expl{Salami} \\
+\Entry{El Disco}{5,50} \\
+\Expl{Scharfe Salami} \\
+\Entry{Frutti di Mare}{6,00} \\
+\Expl{Lachsschinken} \\
+\Entry{El Diablo}{6,50} \\
+\Expl{Scharfe Salami, Peperoni} \\
+\Entry{Mozzerrano}{6,50} \\
+\Expl{Mozzarella, Serrano-Schinken} \\
+\Entry{Pizza alla Fredo $\ast$}{7,50} \\
+\Expl{Belag nach Wunsch} \\
+\end{Group}
+
+\vfill
+
+\begin{Group}{Ungarische Spezialitäten}
+\Entry{Az Ördög}{5,50} \\ 
+\Expl{Ungarische Salami, Peperoni} \\
+\Entry{Kék Fasiszta}{6,00} \\ 
+\Expl{Ungarische Salami, Blauschimmelkäse} \\
+\Entry{Kék Ördog}{6,50} \\ 
+\Expl{Ungarische Salami, Blauschimmelkäse, Peperoni} \\ 
+\end{Group}
+
+\vfill
+
+%\begin{Group}{Vegeratische Optionen}
+%\Entry{Margherita}{4,00} \\ 
+%\Entry{Muschi}{200,00} \\ 
+%\Expl{Rucola} \\ 
+%\Entry{Kompost}{6,50} \\ 
+%\Expl{Pilze und so'n Zeug} \\
+%\Entry{Schaf}{6,50} \\ 
+%\Expl{Viel Peperoni} \\
+%\end{Group}
+%
+%\vfill
+
+\begin{Group}{Getränke}
+\Entry{Club Mate 0,5l}{0,60} \\
+\Expl{Koffeinhaltiges Erfrischungsgetränk auf Mate-Basis} \\
+\Entry{Mio Mio Mate 0,5l $\ast$}{0,80} \\
+\Expl{Koffeinhaltiges Erfrischungsgetränk mit Mateblätter-Auszug} \\
+\Entry{Radler 0,5l $\ast$}{0,80} \\
+\Expl{Verschiedene Sorten} \\
+\Entry{Bier 0,5l}{1,00} \\
+\Expl{Verschiedene Sorten} \\
+\end{Group}
+
+\vfill
+
+\noindent \small Alle Pizzen werden mit feinster Tomatensoße, köstlichem Käse und liebe\-voll hergestelltem  Teig zubereitet.\\
+$\ast$ nur bei entsprechender Reservierung
+
+\end{document}
