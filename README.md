@@ -1,5 +1,7 @@
 # Menu for Alfredo
 
+![Alfredo Logo](alfredo.png)
+
 # Install webomints on *nix
 (source/based on: https://tex.stackexchange.com/questions/284082/cant-install-webomints-package)
 
@@ -16,4 +18,6 @@ Miktex does that for you. Easy.
 
 # TODO
 * installer script for webomints
-* Makefile
+* create Makefile for menu
+* integrate Logo into menu
+* update/extend menu choices
