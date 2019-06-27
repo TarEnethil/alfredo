@@ -17,7 +17,6 @@ Some of these commands may require sudo. Use --usr instead of --sys to install t
 Miktex does that for you. Easy.
 
 # TODO
-* installer script for webomints
 * create Makefile for menu
 * update/extend menu choices
 * add Schlonz recipe
