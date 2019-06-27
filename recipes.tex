@@ -1,0 +1,51 @@
+\documentclass[12pt]{article}
+\usepackage[german]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[centering]{geometry}
+\usepackage[x11names]{xcolor}
+\usepackage{nicefrac}
+\usepackage[nonumber,noindex,contents]{cuisine}
+\usepackage{xpatch}
+\usepackage{graphicx}
+
+\title{Alfredos Rezeptbuch}
+\date{}
+
+\RecipeWidths{\textwidth}{3cm}{0cm}{1.75cm}{1.5cm}{.75cm}
+
+% disable ingredient numbering
+\makeatletter
+\xpatchcmd{\Displ@ySt@p}{\arabic{st@pnumber}}{}{}{}
+\makeatother
+
+\begin{document}
+\maketitle
+
+\vspace{-1.5cm}
+\centering
+\includegraphics[width=0.25\textwidth]{alfredo.png}
+
+\begin{recipe}{Pizzateig alla Pfennig-Winkelsträter}{8 Pizzen}{20--25 Minuten}
+	\ingredient[500]{g}{Mehl}
+	\ingredient[2]{TL}{Salz}
+	Mehl und Salz in eine große Schüssel geben und kurz vermischen.
+	Für einen homogeneren Teig kann das Mehl in die Schüssel gesiebt werden.
+	\\	
+
+	\ingredient[5--10]{g}{Frischhefe}
+	\ingredient[300]{g}{Wasser}
+	Hefe zerbröseln und in lauwarmem Wasser auflösen.
+	In die Schüssel geben und mit dem Mehl verrühren.
+	\\
+
+	\freeform
+	
+	Teig auf die Arbeitsfläche auskippen und von Hand für 15 bis 20 Minuten kneten.
+	Danach muss der Teig mindestens 6 Stunden gehen.
+	Entgegen den üblichen Hinweisen sollte der Teig nicht nur mit einem feuchten Tuch abgedeckt werden, da er sonst durch die lange Gehzeit austrocknet.
+	Eine Schüssel mit verschließbarem Deckel hat sich bisher bewehrt.
+ 	Aus den resultierenden 800 Gramm Teig werden 8 Pizzen.
+\end{recipe}
+
+\end{document}

@@ -19,5 +19,5 @@ Miktex does that for you. Easy.
 # TODO
 * installer script for webomints
 * create Makefile for menu
-* integrate Logo into menu
 * update/extend menu choices
+* add Schlonz recipe
