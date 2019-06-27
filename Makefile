@@ -1,4 +1,4 @@
-.PHONY: menu recipes all clean
+.PHONY: menu recipes all clean cleanall
 
 LATEXMK = latexmk -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make
 
@@ -12,4 +12,7 @@ recipes:
 
 clean:
 	latexmk -CA
-	rm -f *.aux *.log *.pdf *.synctex.gz *.toc
+	rm -f *.aux *.log *.synctex.gz *.toc
+
+cleanall: clean
+	rm -f *.pdf

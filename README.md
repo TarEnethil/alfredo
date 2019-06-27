@@ -1,4 +1,4 @@
-# Menu for Alfredo
+# Alfredo menu & recipes
 
 ![Alfredo Logo](alfredo.png)
 
