@@ -1,5 +1,5 @@
 \documentclass[12pt]{article}
-\usepackage[german]{babel}
+\usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[textwidth=12cm,centering]{geometry}
@@ -43,64 +43,90 @@
 \newcommand*\Expl[1]{%
   \hspace*{1em}\footnotesize #1}
 
+\newcommand*\Footer[0]{%
+\vfill
+\noindent \small Alle Pizzen werden mit feinster Tomatensoße, köstlichem Käse und liebe\-voll hergestelltem  Teig zubereitet.\\
+$\ast$ nach Anmeldung}
+
 \pagestyle{empty}
 
 \begin{document}
 
+\vspace{1em}
+
 \begin{Group}{Pizza}
-\Entry{P2}{5,00} \\
+\Entry{P2}{} \\
 \Expl{Salami} \\
-\Entry{El Disco}{5,50} \\
+\Entry{El Disco}{} \\
 \Expl{Scharfe Salami} \\
-\Entry{Frutti di Mare}{6,00} \\
+\Entry{Frutti di Mare}{} \\
 \Expl{Lachsschinken} \\
-\Entry{El Diablo}{6,50} \\
+\Entry{El Diablo}{} \\
 \Expl{Scharfe Salami, Peperoni} \\
-\Entry{Mozzerrano}{6,50} \\
+\Entry{Mozzerrano}{} \\
 \Expl{Mozzarella, Serrano-Schinken} \\
-\Entry{Pizza alla Fredo $\ast$}{7,50} \\
+\Entry{Az Ördög}{} \\ 
+\Expl{Ungarische Salami, Peperoni} \\
+\Entry{Pizza alla Fredo $\ast$}{} \\
 \Expl{Belag nach Wunsch} \\
 \end{Group}
 
-\vfill
+\vspace{1em}
 
-\begin{Group}{Ungarische Spezialitäten}
-\Entry{Az Ördög}{5,50} \\ 
-\Expl{Ungarische Salami, Peperoni} \\
-\Entry{Kék Fasiszta}{6,00} \\ 
-\Expl{Ungarische Salami, Blauschimmelkäse} \\
-\Entry{Kék Ördog}{6,50} \\ 
-\Expl{Ungarische Salami, Blauschimmelkäse, Peperoni} \\ 
+\begin{Group}{Pizza Los Wochos*}
+\Entry{Schiggn-Görry}{} \\
+\Expl{(Jalape\~{n}o-)Hähnchenbrustscheiben mit Ananas-Currysoße} \\
+\Entry{Holländisch}{} \\
+\Expl{Lachsschinken mit Sauce Hollondaise} \\
+\end{Group}
+% \begin{Group}{Ungarische Spezialitäten}
+% \Entry{Kék Fasiszta}{6,00} \\ 
+% \Expl{Ungarische Salami, Blauschimmelkäse} \\
+% \Entry{Kék Ördog}{6,50} \\ 
+% \Expl{Ungarische Salami, Blauschimmelkäse, Peperoni} \\ 
+% \end{Group}
+
+\vspace{1em}
+
+\begin{Group}{Vegetarische Pizza}
+\Entry{Margherita}{} \\ 
+\Expl{Nichts} \\
+\Entry{Schaf}{} \\ 
+\Expl{Viel Peperoni} \\
+\Entry{Molto Formaggi $\ast$}{} \\ 
+\Expl{Verschiedene Käsesorten} \\
+% \Entry{Muschi}{200,00} \\ 
+% \Expl{Rucola} \\ 
+\Entry{Kompost $\ast$}{} \\ 
+\Expl{Frisches aus der Biotonne} \\
 \end{Group}
 
-\vfill
+\Footer
 
-%\begin{Group}{Vegeratische Optionen}
-%\Entry{Margherita}{4,00} \\ 
-%\Entry{Muschi}{200,00} \\ 
-%\Expl{Rucola} \\ 
-%\Entry{Kompost}{6,50} \\ 
-%\Expl{Pilze und so'n Zeug} \\
-%\Entry{Schaf}{6,50} \\ 
-%\Expl{Viel Peperoni} \\
-%\end{Group}
-%
-%\vfill
+\pagebreak
 
-\begin{Group}{Getränke}
-\Entry{Club Mate 0,5l}{0,60} \\
+\vspace{1em}
+
+\begin{Group}{Alkoholfreie Getränke}
+\Entry{Club Mate 0,5l}{} \\
 \Expl{Koffeinhaltiges Erfrischungsgetränk auf Mate-Basis} \\
-\Entry{Mio Mio Mate 0,5l $\ast$}{0,80} \\
+\Entry{Kristallmate}{} \\
+\Expl{Frisch gezapft} \\
+\Entry{Mio Mio Mate 0,5l $\ast$}{} \\
 \Expl{Koffeinhaltiges Erfrischungsgetränk mit Mateblätter-Auszug} \\
-\Entry{Radler 0,5l $\ast$}{0,80} \\
+\Entry{Fritz Mate 0,33l $\ast$}{} \\
+\Expl{Koffeinhaltiges Mategetränk} \\
+\end{Group}
+
+\vspace{3em}
+
+\begin{Group}{Alkoholische Getränke}
+\Entry{Bier 0,5l}{} \\
 \Expl{Verschiedene Sorten} \\
-\Entry{Bier 0,5l}{1,00} \\
+\Entry{Radler 0,5l $\ast$}{} \\
 \Expl{Verschiedene Sorten} \\
 \end{Group}
 
-\vfill
-
-\noindent \small Alle Pizzen werden mit feinster Tomatensoße, köstlichem Käse und liebe\-voll hergestelltem  Teig zubereitet.\\
-$\ast$ nur bei entsprechender Reservierung
+\Footer
 
 \end{document}
