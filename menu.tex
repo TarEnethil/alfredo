@@ -1,5 +1,5 @@
 \documentclass[12pt]{article}
-\usepackage[spanish]{babel}
+\usepackage[german]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[textwidth=12cm,centering]{geometry}
@@ -43,10 +43,15 @@
 \newcommand*\Expl[1]{%
   \hspace*{1em}\footnotesize #1\vspace*{5pt}}
 
-\newcommand*\Footer[0]{%
+\newcommand*\FooterOne[0]{%
 \vfill
 \noindent \small Alle Pizzen werden mit feinster Tomatensoße, köstlichem Käse und liebe\-voll hergestelltem  Teig zubereitet.\\
-$\ast$ nach Anmeldung}
+$\ast$ nach Anmeldung, $\ast$$\ast$ Erfordert Vorbereitung}
+
+\newcommand*\FooterTwo[0]{%
+	\vfill
+	\noindent \small Letzte Aktualisierung: \today\\
+	$\ast$ nach Anmeldung}
 
 \pagestyle{empty}
 
@@ -55,16 +60,18 @@ $\ast$ nach Anmeldung}
 \vspace{1em}
 
 \begin{Group}{Pizza}
-\Entry{El Disco}{} \\
-\Expl{Scharfe Salami, Pfefferonen} \\
+\Entry{El Classico}{} \\
+\Expl{Scharfe Salami, Pfeffronen} \\
 \Entry{Frutti di Mare Olandesi}{} \\
-\Expl{Lachsschinken, Sauce Hollondaise} \\
+\Expl{Lachschinken, Sauce Hollandaise} \\
 \Entry{Mozzerrano}{} \\
 \Expl{Mozzarella, Serrano-Schinken} \\
 \Entry{Currywurst} \\
-\Expl{Wiener Würstchen, Curry-Ketchup, Currypulver, scharf} \\
+\Expl{Wiener Würstchen, Curry-Ketchup, Currypulver (scharf)} \\
 \Entry{Schiggn}{} \\
-\Expl{Hähnchenbrust, verschiedene Saucen} \\
+\Expl{Hähnchenbrust, verschiedene Soßen} \\
+\Entry{Cheeseburger}{} \\
+\Expl{(Veg.) Hack, Saure Gurken, Pfeffronen, Röstzwiebeln, Cheddar, Burgersoße} \\
 \end{Group}
 
 \vspace{1em}
@@ -72,8 +79,8 @@ $\ast$ nach Anmeldung}
 \begin{Group}{Für besondere Anlässe}
 \Entry{Margherita}{} \\ 
 \Expl{Nichts} \\
-\Entry{Schaf}{} \\ 
-\Expl{Viel Peperoni} \\
+\Entry{Bauernfrühstück $\ast$$\ast$}{} \\
+\Expl{Bratkartoffeln, Bacon/Schinken(-würfel), Pfeffronen, Sauce Hollandaise} \\
 \Entry{Molto Formaggi $\ast$}{} \\ 
 \Expl{Verschiedene Käsesorten} \\
 \Entry{La Spagnola $\ast$}{} \\
@@ -84,8 +91,9 @@ $\ast$ nach Anmeldung}
 \Expl{Belag nach Wunsch} \\
 \end{Group}
 
-
 \vspace{1em}
+
+\FooterOne
 
 \begin{Group}{Alkoholfreie Getränke}
 \Entry{Club Mate 0,5l}{} \\
@@ -96,30 +104,36 @@ $\ast$ nach Anmeldung}
 \Expl{Koffeinhaltiges Erfrischungsgetränk mit Mateblätter-Auszug} \\
 \Entry{Fritz Mate 0,33l $\ast$}{} \\
 \Expl{Koffeinhaltiges Mategetränk} \\
+\Entry{Hopfenmate 0,5l $\ast$}{} \\
+\Expl{Alkoholfreies Bier} \\
 \end{Group}
 
-\vspace{3em}
+\vspace{1em}
 
 \begin{Group}{Alkoholische Getränke}
 \Entry{Bier 0,5l}{} \\
 \Expl{Verschiedene Sorten} \\
 \Entry{Radler 0,5l $\ast$}{} \\
 \Expl{Verschiedene Sorten} \\
+\Entry{Original Hessischer Apfelwein 0,5l}{} \\
+\Expl{Verschiedene Sorten} \\
 \end{Group}
 
-\vspace{3em}
+\vspace{1em}
 
 \begin{Group}{Soßen}
-	\Entry{Ananas-Curry}{} \\
-	\Expl{aus Ananas und Curry} \\
+	\Entry{Mango-Curry}{} \\
+	\Expl{aus Mangos und Curry} \\
 	\Entry{Chipotle-Chili}{} \\
 	\Expl{aus Chipotle-Chilischoten} \\
-	\Entry{Käse-Dip} \\
-	\Expl{``Milcherzeugnis''} \\
-	\Entry{Hollondaise} \\
+	\Entry{Hollandaise} \\
 	\Expl{aufgeschlagene Buttersoße} \\
+	\Entry{div. Hotsauces}{} \\
+	\Expl{aus flüssigem Schmerz} \\
+	\Entry{Käse-Dip $\ast$} \\
+	\Expl{``Milcherzeugnis''} \\
 \end{Group}
 
-\Footer
+\FooterTwo
 
 \end{document}
