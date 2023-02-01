@@ -6,3 +6,6 @@
 *.fdb_latexmk
 *.fls
 install-getnon*
+bot/venv
+*__pycache__*
+*.pyc
