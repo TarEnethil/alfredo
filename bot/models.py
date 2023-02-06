@@ -13,3 +13,4 @@ class AlfredoDate(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     date: Mapped[Date] = mapped_column(Date)
     description: Mapped[Optional[String]] = mapped_column(String)
+    message_id: Mapped[Optional[Integer]] = mapped_column(Integer)

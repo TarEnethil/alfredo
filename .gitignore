@@ -10,3 +10,4 @@ bot/venv
 *__pycache__*
 *.pyc
 bot/config.json
+*.sqlite
