@@ -1,6 +1,7 @@
 import logging
 import os.path
-from sqlalchemy import create_engine
+from datetime import date
+from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
 from models import Base, AlfredoDate
 
@@ -23,3 +24,11 @@ class Database:
         with Session(self.engine) as session:
             session.add(new_date)
             session.commit()
+
+    def get_future_dates(self):
+        with Session(self.engine) as session:
+            dates = session.scalars(select(AlfredoDate)
+                                    .where(func.DATE(AlfredoDate.date) >= date.today())
+                                    .order_by(AlfredoDate.date)).all()
+
+        return dates

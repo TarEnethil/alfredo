@@ -6,9 +6,10 @@ from os import path
 from sys import exit
 from datetime import date
 
+import util
+
 from database import Database
 
-import babel.dates
 import telebot
 
 
@@ -23,8 +24,16 @@ db = None
 
 emojis = {
     "check": u'\U00002713',
-    "cross": u'\U0000274C'
+    "cross": u'\U0000274C',
+    "frowning": u'\U0001F641',
+    "bullet": u'\U00002022'
 }
+
+default_commands = [
+    telebot.types.BotCommand("termine", "Zeigt die nächsten Alfredotermine"),
+    telebot.types.BotCommand("start", "Zeigt die verfügbaren Kommandos"),
+    telebot.types.BotCommand("help", "Zeigt die verfügbaren Kommandos")
+]
 
 
 def load_config():
@@ -56,14 +65,43 @@ def is_admin(user):
     return user.id in config["admins"]
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
     config = load_config()
     bot = telebot.TeleBot(config["token"])
     db = Database("alfredo.sqlite")
 
-    @bot.message_handler(commands=['help', 'start'])
-    def send_welcome(message):
-        bot.reply_to(message, "Hello.")
+    bot.set_my_commands(default_commands)
+
+    @bot.message_handler(commands=['start'])
+    def start(message):
+        msg = "Mamma-mia!\n\n"
+        msg += f"{emojis['bullet']} Verfügbare Kommandos: /help\n"
+        msg += f"{emojis['bullet']} version: {util.get_version()}\n"
+        msg += f"{emojis['bullet']} github: https://github.com/TarEnethil/alfredo/ \n"
+
+        bot.reply_to(message, msg, disable_web_page_preview=True)
+
+    @bot.message_handler(commands=['help'])
+    def help(message):
+        msg = "Mamma-mia!\n\n"
+        msg += "Verfügbare Kommandos:\n"
+        msg += f"{emojis['bullet']} /termine"
+
+        bot.reply_to(message, msg)
+
+    @bot.message_handler(commands=["termine"])
+    def show_dates(message):
+        dates = db.get_future_dates()
+
+        if len(dates) == 0:
+            msg = f"Es wurden keine weiteren Termine angekündigt {emojis['frowning']}"
+        else:
+            msg = f"Die nächsten {len(dates)} Termine:\n\n"
+
+            for date_ in dates:
+                msg += f"{emojis['bullet']} {util.format_date(date_.date)}\n"
+
+        bot.reply_to(message, msg)
 
     @bot.message_handler(commands=['newalfredo'])
     def new_alfredo(message):
@@ -85,14 +123,13 @@ if __name__ == "__main__":
             send_error(message, f"Date string could not be parsed: {verr}")
             return
 
-        # todo: check if in the future
         today = date.today()
 
         if date_ <= today:
             send_error(message, "Date must be in the future")
             return
 
-        description = f"Alfredo am {babel.dates.format_date(date_, format='full', locale='de_DE')} (18:00 Uhr)"
+        description = f"Alfredo am {util.format_date(date_)} (18:00 Uhr)"
 
         try:
             poll = bot.send_poll(
