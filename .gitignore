@@ -11,3 +11,5 @@ bot/venv
 *.pyc
 bot/config.json
 *.sqlite
+bot/htmlcov
+.coverage
