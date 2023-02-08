@@ -85,7 +85,7 @@ if __name__ == "__main__":  # noqa: C901
         for cmd in default_commands:
             msg += util.li(f"/{cmd.command}: {cmd.description}")
 
-        if is_admin(message.from_user):
+        if is_admin(message.from_user) and message.chat.type == "private":
             msg += "\nAdminkommandos:\n"
             msg += util.li("/newalfredo 20xx-yy-zz")
 
