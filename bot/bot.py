@@ -25,6 +25,7 @@ db = None
 
 default_commands = [
     telebot.types.BotCommand("termine", "Zeigt die nächsten Alfredotermine"),
+    telebot.types.BotCommand("karte", "Verlinkt die Alfredokarte"),
     telebot.types.BotCommand("start", "Zeigt die Willkommensnachricht an"),
     telebot.types.BotCommand("help", "Zeigt die verfügbaren Kommandos")
 ]
@@ -69,7 +70,7 @@ if __name__ == "__main__":  # noqa: C901
     @bot.message_handler(commands=['start'])
     def start(message):
         msg = "Mamma-mia!\n\n"
-        msg += util.li("Verfügbare Kommandos: /help")
+        msg += util.li("Verfügbare Kommandos: siehe /help")
         msg += util.li("Maintainer: @TriviaThorsten")
         msg += util.li(f"Version: {util.get_version()}")
         msg += util.li("Bugreports: https://github.com/TarEnethil/alfredo/issues")
@@ -80,13 +81,22 @@ if __name__ == "__main__":  # noqa: C901
     def help(message):
         msg = "Mamma-mia!\n\n"
         msg += "Verfügbare Kommandos:\n"
-        msg += util.li("/termine")
+
+        for cmd in default_commands:
+            msg += util.li(f"/{cmd.command}: {cmd.description}")
 
         if is_admin(message.from_user):
             msg += "\nAdminkommandos:\n"
             msg += util.li("/newalfredo 20xx-yy-zz")
 
         bot.reply_to(message, msg)
+
+    @bot.message_handler(commands=['karte'])
+    def menu(message):
+        url = "https://github.com/TarEnethil/alfredo/releases/latest/download/menu.pdf"
+
+        msg = f"Link zur aktuellen Karte: [Link]({url})"
+        bot.reply_to(message, msg, disable_web_page_preview=True, parse_mode="MarkdownV2")
 
     @bot.message_handler(commands=["termine"])
     def show_dates(message):
