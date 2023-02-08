@@ -22,16 +22,10 @@ config = None
 bot = None
 db = None
 
-emojis = {
-    "check": u'\U00002713',
-    "cross": u'\U0000274C',
-    "frowning": u'\U0001F641',
-    "bullet": u'\U00002022'
-}
 
 default_commands = [
     telebot.types.BotCommand("termine", "Zeigt die nächsten Alfredotermine"),
-    telebot.types.BotCommand("start", "Zeigt die verfügbaren Kommandos"),
+    telebot.types.BotCommand("start", "Zeigt die Willkommensnachricht an"),
     telebot.types.BotCommand("help", "Zeigt die verfügbaren Kommandos")
 ]
 
@@ -58,7 +52,7 @@ def load_config():
 
 def send_error(reply_to, errmsg):
     logger.error(f"sending error reply message: '{errmsg}'")
-    bot.reply_to(reply_to, f"{emojis['cross']} error: {errmsg}")
+    bot.reply_to(reply_to, f"{util.emoji('cross')} error: {errmsg}")
 
 
 def is_admin(user):
@@ -75,9 +69,10 @@ if __name__ == "__main__":  # noqa: C901
     @bot.message_handler(commands=['start'])
     def start(message):
         msg = "Mamma-mia!\n\n"
-        msg += f"{emojis['bullet']} Verfügbare Kommandos: /help\n"
-        msg += f"{emojis['bullet']} version: {util.get_version()}\n"
-        msg += f"{emojis['bullet']} github: https://github.com/TarEnethil/alfredo/ \n"
+        msg += util.li("Verfügbare Kommandos: /help")
+        msg += util.li("Maintainer: @TriviaThorsten")
+        msg += util.li(f"Version: {util.get_version()}")
+        msg += util.li("Bugreports: https://github.com/TarEnethil/alfredo/issues")
 
         bot.reply_to(message, msg, disable_web_page_preview=True)
 
@@ -85,11 +80,11 @@ if __name__ == "__main__":  # noqa: C901
     def help(message):
         msg = "Mamma-mia!\n\n"
         msg += "Verfügbare Kommandos:\n"
-        msg += f"{emojis['bullet']} /termine"
+        msg += util.li("/termine")
 
         if is_admin(message.from_user):
-            msg += "\n\nAdminkommandos:\n"
-            msg += f"{emojis['bullet']} /newalfredo 20xx-yy-zz"
+            msg += "\nAdminkommandos:\n"
+            msg += util.li("/newalfredo 20xx-yy-zz")
 
         bot.reply_to(message, msg)
 
@@ -99,14 +94,14 @@ if __name__ == "__main__":  # noqa: C901
         num = len(dates)
 
         if num == 0:
-            msg = f"Es wurden keine weiteren Termine angekündigt {emojis['frowning']}"
+            msg = f"Es wurden keine weiteren Termine angekündigt {util.emoji('frowning')}"
         elif num == 1:
             msg = f"Der (einzige) nächste Termin ist am {util.format_date(dates[0].date)}."
         else:
             msg = f"Die nächsten {len(dates)} Termine:\n\n"
 
             for date_ in dates:
-                msg += f"{emojis['bullet']} {util.format_date(date_.date)}\n"
+                msg += f"{util.emoji('bullet')} {util.format_date(date_.date)}\n"
 
         bot.reply_to(message, msg)
 
@@ -155,6 +150,6 @@ if __name__ == "__main__":  # noqa: C901
 
         db.create_alfredo_date(date_, description, poll.message_id)
 
-        bot.reply_to(message, f"Poll was created {emojis['check']}")
+        bot.reply_to(message, f"Poll was created {util.emoji('check')}")
 
     bot.infinity_polling()
