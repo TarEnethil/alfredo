@@ -18,7 +18,7 @@ class Database:
         self.engine = create_engine(f"sqlite:///{output_file}", echo=False, future=True)
         Base.metadata.create_all(self.engine)
 
-    def create_alfredo_date(self, date, description, message_id):
+    def create_alfredo_date(self, date, description=None, message_id=None):
         new_date = AlfredoDate(date=date, description=description, message_id=message_id)
 
         with Session(self.engine) as session:
@@ -32,3 +32,9 @@ class Database:
                                     .order_by(AlfredoDate.date)).all()
 
         return dates
+
+    def check_date_is_free(self, date):
+        with Session(self.engine) as session:
+            existing = session.scalars(select(AlfredoDate).where(AlfredoDate.date.is_(date))).first()
+
+        return existing is None

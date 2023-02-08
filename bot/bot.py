@@ -129,6 +129,10 @@ if __name__ == "__main__":  # noqa: C901
             send_error(message, "Date must be in the future")
             return
 
+        if db.check_date_is_free(date_) is False:
+            send_error(message, f"There is already an Alfredo on this date ({util.format_date(date_)})")
+            return
+
         description = f"Alfredo am {util.format_date(date_)} (18:00 Uhr)"
 
         try:
