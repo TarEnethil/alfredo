@@ -92,9 +92,12 @@ if __name__ == "__main__":  # noqa: C901
     @bot.message_handler(commands=["termine"])
     def show_dates(message):
         dates = db.get_future_dates()
+        num = len(dates)
 
-        if len(dates) == 0:
+        if num == 0:
             msg = f"Es wurden keine weiteren Termine angekündigt {emojis['frowning']}"
+        elif num == 1:
+            msg = f"Der (einzige) nächste Termin ist am {util.format_date(dates[0].date)}."
         else:
             msg = f"Die nächsten {len(dates)} Termine:\n\n"
 
