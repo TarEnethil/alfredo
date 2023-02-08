@@ -87,6 +87,10 @@ if __name__ == "__main__":  # noqa: C901
         msg += "Verfügbare Kommandos:\n"
         msg += f"{emojis['bullet']} /termine"
 
+        if is_admin(message.from_user):
+            msg += "\n\nAdminkommandos:\n"
+            msg += f"{emojis['bullet']} /newalfredo 20xx-yy-zz"
+
         bot.reply_to(message, msg)
 
     @bot.message_handler(commands=["termine"])
