@@ -100,3 +100,18 @@ class TestDatabase:
         add_default_dates(db)
 
         assert db.check_date_is_free(date.fromisoformat("2001-02-03")) is False
+
+    def test_reopen_db(self, tmp_path):
+        f = tmp_path / "database.sqlite"
+        db = Database(f)
+
+        db.create_alfredo_date(date.fromisoformat("2001-02-03"), "first description", 123)
+
+        del db
+
+        db = Database(f)
+        assert_row_count(db, AlfredoDate, 1)
+
+        with Session(db.engine) as session:
+            d1 = session.scalars(select(AlfredoDate).where(AlfredoDate.id.is_(1))).first()
+            assert d1.date == date.fromisoformat("2001-02-03")

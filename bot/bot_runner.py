@@ -18,6 +18,10 @@ class BotRunner:
         telebot.types.BotCommand("help", "Zeigt die verfügbaren Kommandos")
     ]
 
+    admin_commands = [
+        telebot.types.BotCommand("newalfredo", "Umfrage für neuen Alfredotermin starten")
+    ]
+
     def __init__(self, cfgfile, bot_invoker, dbfile):
         self.log = logging.getLogger("BotRunner")
 
@@ -111,7 +115,7 @@ class BotRunner:
             self.send_error(message, "Du bist kein Admin.")
             return
 
-        params = message.text.split(" ")
+        params = message.text.strip().split(" ")
 
         if len(params) != 2:
             self.send_error(message, f"Befehl erwartet nur einen Parameter, geparsed wurden {len(params) - 1}")
@@ -120,7 +124,7 @@ class BotRunner:
         try:
             date_ = date.fromisoformat(params[1])
         except ValueError as verr:
-            self.send_error(message, f"String konnte nicht in Datum konvertiert werden: {verr}")
+            self.send_error(message, f"String konnte nicht in ein Datum konvertiert werden: {verr}")
             return
 
         today = date.today()
