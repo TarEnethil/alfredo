@@ -120,29 +120,29 @@ if __name__ == "__main__":  # noqa: C901
         logger.debug(message)
 
         if not is_admin(message.from_user):
-            send_error(message, "You are not an admin.")
+            send_error(message, "Du bist kein Admin.")
             return
 
         params = message.text.split(" ")
 
         if len(params) != 2:
-            send_error(message, f"Invalid number of parameters, expected 1, got {len(params) - 1}")
+            send_error(message, f"Befehl erwartet nur einen Parameter, geparsed wurden {len(params) - 1}")
             return
 
         try:
             date_ = date.fromisoformat(params[1])
         except ValueError as verr:
-            send_error(message, f"Date string could not be parsed: {verr}")
+            send_error(message, f"String konnte nicht in Datum konvertiert werden: {verr}")
             return
 
         today = date.today()
 
         if date_ <= today:
-            send_error(message, "Date must be in the future")
+            send_error(message, "Datum darf frühstens heute sein.")
             return
 
         if db.check_date_is_free(date_) is False:
-            send_error(message, f"There is already an Alfredo on this date ({util.format_date(date_)})")
+            send_error(message, f"An diesem Termin ist bereits ein Alfredo eingetragen ({util.format_date(date_)})")
             return
 
         description = f"Alfredo am {util.format_date(date_)} (18:00 Uhr)"
@@ -155,11 +155,11 @@ if __name__ == "__main__":  # noqa: C901
                 is_anonymous=False,
             )
         except Exception as ex:
-            send_error(message, f"Telegram API returned an error: {ex}")
+            send_error(message, f"Telegram API meldete einen Fehler: {ex}")
             return
 
         db.create_alfredo_date(date_, description, poll.message_id)
 
-        bot.reply_to(message, f"Poll was created {util.emoji('check')}")
+        bot.reply_to(message, f"Umfrage wurde erstellt {util.emoji('check')}")
 
     bot.infinity_polling()
