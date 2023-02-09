@@ -13,10 +13,16 @@ cp config.json.template config.json
 * Invite bot to your group and get the "chat_id" from `https://api.telegram.org/bot<TOKEN>/getUpdates` -> config value "group" (negative ID as string)
 * Write one message to your bot and get your "chat_id" from `https://api.telegram.org/bot<TOKEN>/getUpdates` -> config value "admins" (list of integers)
 
+# Run Bot
+* `./bot.py`
+
 # Dev
 * Lint: `flake8 .`
 * Tests: `./run_tests.sh` 
 * Coverage: `./coverage.sh`
 
-# Run Bot
-* `./bot.py`
+# TODO
+* Add comments
+* Wrap Telegram API calls for exception safety
+* Add more logging
+* Add auto reminder (day before)
