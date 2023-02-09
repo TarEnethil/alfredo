@@ -69,7 +69,8 @@ class BotRunner:
         return user.id in self.config["admins"]
 
     def cmd_start(self, message):
-        msg = "Mamma-mia!\n\n"
+        msg = "Mamma Mia!\n\n"
+        msg += "Der AlfredoBot versorgt dich mit allen Informationen rund um die beste Pizza der Welt.\n\n"
         msg += util.li("Verfügbare Kommandos: siehe /help")
         msg += util.li("Maintainer: @TriviaThorsten")
         msg += util.li(f"Version: {util.get_version()}")
@@ -78,8 +79,7 @@ class BotRunner:
         self.bot.reply_to(message, msg, disable_web_page_preview=True)
 
     def cmd_help(self, message):
-        msg = "Mamma-mia!\n\n"
-        msg += "Verfügbare Kommandos:\n"
+        msg = "Verfügbare Kommandos:\n"
 
         for cmd in self.default_commands:
             msg += util.li(f"/{cmd.command}: {cmd.description}")
