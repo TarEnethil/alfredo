@@ -14,3 +14,5 @@ bot/config.json
 bot/htmlcov
 .coverage
 coverage.xml
+*.jpg
+*.*~
