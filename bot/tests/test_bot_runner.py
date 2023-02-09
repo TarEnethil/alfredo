@@ -8,6 +8,7 @@ import pytest
 
 ADMIN1 = 42
 ADMIN2 = 69
+GROUP = "-1337"
 TESTCFG = "tests/config-test.json"
 
 
@@ -222,6 +223,8 @@ class TestBotRunner:
         assert "Umfrage wurde erstellt" in runner.bot.last_reply
         assert num_dates(runner.db) == 1
         date_ = runner.db.get_future_dates()[0]
+        assert runner.bot.last_chat_id == GROUP
+        assert util.format_date(date.fromisoformat("2199-01-01")) in runner.bot.last_text
         assert date_.date == date.fromisoformat("2199-01-01")
         assert date_.message_id == 1
 
@@ -229,6 +232,25 @@ class TestBotRunner:
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01"))
         assert "bereits ein Alfredo" in runner.bot.last_reply
         assert num_dates(runner.db) == 1
+
+    def test_acmd_announce(self):
+        runner = defaultRunner()
+
+        # error 1: no admin
+        runner.bot.handle_command("announce", FakeMessage(FakeUser(1), text="announce message"))
+        assert "kein Admin" in runner.bot.last_reply
+
+        # error 2: no param
+        runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce"))
+        assert "Parameter" in runner.bot.last_reply
+        runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce "))
+        assert "Parameter" in runner.bot.last_reply
+
+        # goodcase
+        runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce Test Test Test"))
+        assert runner.bot.last_chat_id == GROUP
+        assert runner.bot.last_text.endswith("Test Test Test")
+        assert "announce" not in runner.bot.last_text
 
     def test_run(self):
         runner = defaultRunner()

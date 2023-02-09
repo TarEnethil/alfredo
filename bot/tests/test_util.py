@@ -20,6 +20,7 @@ class TestUtil:
         assert util.emoji("cross") != ""
         assert util.emoji("check") != ""
         assert util.emoji("frowning") != ""
+        assert util.emoji("megaphone") != ""
 
         assert util.emoji("does_not_exist") == ""
 

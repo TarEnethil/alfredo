@@ -12,9 +12,16 @@ class FakeBot:
             assert cmd not in self.handlers.keys()
             self.handlers[cmd] = func
 
-    def send_poll(self, **kwargs):
+    def send_message(self, chat_id, text, **kwargs):
+        self.last_chat_id = chat_id
+        self.last_text = text
+
+    def send_poll(self, chat_id, question, **kwargs):
         if self.poll_fail:
             raise Exception("Fake API Error")
+
+        self.last_chat_id = chat_id
+        self.last_text = question
 
         self.message_id += 1
         return FakePoll(self.message_id)
