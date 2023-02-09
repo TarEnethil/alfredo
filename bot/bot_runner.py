@@ -19,7 +19,8 @@ class BotRunner:
     ]
 
     admin_commands = [
-        telebot.types.BotCommand("newalfredo", "Umfrage für neuen Alfredotermin starten")
+        telebot.types.BotCommand("newalfredo", "<iso-date> Umfrage für neuen Alfredotermin starten"),
+        telebot.types.BotCommand("announce", "<announcement> Ankündigung in der Gruppe posten")
     ]
 
     def __init__(self, cfgfile, bot_invoker, dbfile):
@@ -55,6 +56,7 @@ class BotRunner:
         self.bot.register_message_handler(self.cmd_show_dates, commands=["termine"])
 
         self.bot.register_message_handler(self.acmd_new_alfredo, commands=['newalfredo'])
+        self.bot.register_message_handler(self.acmd_announce, commands=['announce'])
 
     def init_database(self, dbfile):
         self.db = Database(dbfile)
@@ -84,7 +86,8 @@ class BotRunner:
 
         if self.user_is_admin(message.from_user) and message.chat.type == "private":
             msg += "\nAdminkommandos:\n"
-            msg += util.li("/newalfredo 20xx-yy-zz")
+            for cmd in self.admin_commands:
+                msg += util.li(f"/{cmd.command} {cmd.description}")
 
         self.bot.reply_to(message, msg)
 
@@ -154,6 +157,25 @@ class BotRunner:
         self.db.create_alfredo_date(date_, description, poll.message_id)
 
         self.bot.reply_to(message, f"Umfrage wurde erstellt {util.emoji('check')}")
+
+    def acmd_announce(self, message):
+        if not self.user_is_admin(message.from_user):
+            self.send_error(message, "Du bist kein Admin.")
+            return
+
+        params = message.text.strip().split(" ")
+
+        if len(params) < 2:
+            self.send_error(message, "Befehl benötigt Parameter")
+            return
+
+        announcement = f"{util.emoji('megaphone')} {' '.join(params[1:])}"
+
+        self.bot.send_message(
+            chat_id=self.config["group"],
+            text=announcement,
+            disable_web_page_preview=True
+        )
 
     def run(self):
         self.bot.infinity_polling()

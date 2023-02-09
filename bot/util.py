@@ -4,7 +4,8 @@ emojis = {
     "check": u'\U00002705',
     "cross": u'\U0000274C',
     "frowning": u'\U0001F641',
-    "bullet": u'\U00002022'
+    "bullet": u'\U00002022',
+    "megaphone": u'\U0001F4E3'
 }
 
 
