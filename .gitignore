@@ -13,3 +13,4 @@ bot/config.json
 *.sqlite
 bot/htmlcov
 .coverage
+coverage.xml
