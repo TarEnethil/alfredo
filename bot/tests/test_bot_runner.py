@@ -313,6 +313,7 @@ class TestBotRunner:
 
         # goodcase
         runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce Test Test Test"))
+        assert "Ankündigung wurde gesendet" in runner.bot.last_reply_text
         assert runner.bot.last_message_chat_id == GROUP
         assert runner.bot.last_message_text.endswith("Test Test Test")
         assert "announce" not in runner.bot.last_message_text

@@ -205,6 +205,9 @@ class BotRunner:
             )
         except Exception as ex:
             self.send_error(message, f"Telegram API meldete einen Fehler: {ex}")
+            return
+
+        self.safe_exec(self.bot.reply_to, message=message, text=f"Ankündigung wurde gesendet {util.emoji('check')}")
 
     def run(self):
         self.bot.infinity_polling()
