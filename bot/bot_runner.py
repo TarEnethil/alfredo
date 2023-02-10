@@ -63,10 +63,23 @@ class BotRunner:
 
     def send_error(self, reply_to, errmsg):
         self.log.info(f"sending error reply message: '{errmsg}'")
-        self.bot.reply_to(reply_to, f"{util.emoji('cross')} Fehler: {errmsg}")
+        self.safe_exec(
+            self.bot.reply_to,
+            message=reply_to,
+            text=f"{util.emoji('cross')} Fehler: {errmsg}"
+        )
 
     def user_is_admin(self, user):
         return user.id in self.config["admins"]
+
+    def safe_exec(self, func, reraise=False, **kwargs):
+        try:
+            return func(**kwargs)
+        except Exception as ex:
+            self.log.error(f"Telegram API Exception: {ex}")
+
+            if reraise:
+                raise ex
 
     def cmd_start(self, message):
         msg = "Mamma Mia!\n\n"
@@ -76,7 +89,7 @@ class BotRunner:
         msg += util.li(f"Version: {util.get_version()}")
         msg += util.li("Bugreports: https://github.com/TarEnethil/alfredo/issues")
 
-        self.bot.reply_to(message, msg, disable_web_page_preview=True)
+        self.safe_exec(self.bot.reply_to, message=message, text=msg, disable_web_page_preview=True)
 
     def cmd_help(self, message):
         msg = "Verfügbare Kommandos:\n"
@@ -89,13 +102,19 @@ class BotRunner:
             for cmd in self.admin_commands:
                 msg += util.li(f"/{cmd.command} {cmd.description}")
 
-        self.bot.reply_to(message, msg)
+        self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
     def cmd_menu(self, message):
         url = "https://github.com/TarEnethil/alfredo/releases/latest/download/menu.pdf"
 
         msg = f"Link zur aktuellen Karte: [Link]({url})"
-        self.bot.reply_to(message, msg, disable_web_page_preview=True, parse_mode="MarkdownV2")
+        self.safe_exec(
+           self.bot.reply_to,
+           message=message,
+           text=msg,
+           disable_web_page_preview=True,
+           parse_mode="MarkdownV2"
+        )
 
     def cmd_show_dates(self, message):
         dates = self.db.get_future_dates()
@@ -111,7 +130,7 @@ class BotRunner:
             for date_ in dates:
                 msg += f"{util.emoji('bullet')} {util.format_date(date_.date)}\n"
 
-        self.bot.reply_to(message, msg)
+        self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
     def acmd_new_alfredo(self, message):
         if not self.user_is_admin(message.from_user):
@@ -144,7 +163,9 @@ class BotRunner:
         description = f"Alfredo am {util.format_date(date_)} (18:00 Uhr)"
 
         try:
-            poll = self.bot.send_poll(
+            poll = self.safe_exec(
+                self.bot.send_poll,
+                reraise=True,
                 chat_id=self.config["group"],
                 question=description,
                 options=["Teilnahme", "Teilnahme (+1 Gast)", "Absage"],
@@ -156,7 +177,7 @@ class BotRunner:
 
         self.db.create_alfredo_date(date_, description, poll.message_id)
 
-        self.bot.reply_to(message, f"Umfrage wurde erstellt {util.emoji('check')}")
+        self.safe_exec(self.bot.reply_to, message=message, text=f"Umfrage wurde erstellt {util.emoji('check')}")
 
     def acmd_announce(self, message):
         if not self.user_is_admin(message.from_user):
@@ -171,11 +192,16 @@ class BotRunner:
 
         announcement = f"{util.emoji('megaphone')} {' '.join(params[1:])}"
 
-        self.bot.send_message(
-            chat_id=self.config["group"],
-            text=announcement,
-            disable_web_page_preview=True
-        )
+        try:
+            self.safe_exec(
+                self.bot.send_message,
+                reraise=True,
+                chat_id=self.config["group"],
+                text=announcement,
+                disable_web_page_preview=True
+            )
+        except Exception as ex:
+            self.send_error(message, f"Telegram API meldete einen Fehler: {ex}")
 
     def run(self):
         self.bot.infinity_polling()

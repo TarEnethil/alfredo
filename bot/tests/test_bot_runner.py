@@ -83,6 +83,42 @@ class TestBotRunner:
         assert runner.user_is_admin(admin2)
         assert runner.user_is_admin(user) is False
 
+    def test_safe_exec(self):
+        runner = defaultRunner()
+
+        def no_raise(arg):
+            assert arg == "test"
+            return True
+
+        def raise_(arg):
+            assert arg == "test"
+            raise Exception("Fake Test Exception")
+
+        assert runner.safe_exec(no_raise, arg="test")
+        assert runner.safe_exec(no_raise, reraise=False, arg="test")
+
+        with pytest.raises(Exception):
+            runner.safe_exec(raise_, reraise=True, arg="test")
+
+    def test_cms_with_execption(self):
+        runner = defaultRunner()
+
+        # collection of goodcases
+        cmds = {
+            "start": FakeMessage(),
+            "help": FakeMessage(FakeUser(1), "channel"),
+            "karte": FakeMessage(),
+            "termine": FakeMessage(),
+            "newalfredo": FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01"),
+            "announce": FakeMessage(FakeUser(ADMIN1), text="announce Test Test Test")
+        }
+
+        assert len(cmds) == len(runner.default_commands) + len(runner.admin_commands)
+
+        for cmd, msg in cmds.items():
+            runner.bot.raise_on_next_action()
+            runner.bot.handle_command(cmd, msg)
+
     def test_cmd_start(self):
         runner = defaultRunner()
 
@@ -129,6 +165,7 @@ class TestBotRunner:
     def test_cmd_menu(self):
         runner = defaultRunner()
 
+        # goodcase
         runner.bot.handle_command("karte", FakeMessage())
         msg = runner.bot.last_reply
 
@@ -212,11 +249,10 @@ class TestBotRunner:
         assert num_dates(runner.db) == 0
 
         # error 5: telegram exception
-        runner.bot.send_poll_shall_fail(True)
+        runner.bot.raise_on_next_action()
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01"))
         assert "Telegram API" in runner.bot.last_reply
         assert num_dates(runner.db) == 0
-        runner.bot.send_poll_shall_fail(False)
 
         # goodcase
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01"))
@@ -245,6 +281,11 @@ class TestBotRunner:
         assert "Parameter" in runner.bot.last_reply
         runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce "))
         assert "Parameter" in runner.bot.last_reply
+
+        # error 3: telegram exception
+        runner.bot.raise_on_next_action()
+        runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce Test Test Test"))
+        assert "Telegram API" in runner.bot.last_reply
 
         # goodcase
         runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce Test Test Test"))

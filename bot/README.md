@@ -23,6 +23,6 @@ cp config.json.template config.json
 
 # TODO
 * Add comments
-* Wrap Telegram API calls for exception safety
 * Add more logging
 * Add auto reminder (day before)
+* Add acmd to cancel a date
