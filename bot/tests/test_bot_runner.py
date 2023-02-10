@@ -68,7 +68,7 @@ class TestBotRunner:
 
         runner.send_error(msg, "Test")
 
-        error = runner.bot.last_reply
+        error = runner.bot.last_reply_text
         assert "Fehler" in error
         assert "Test" in error
 
@@ -127,19 +127,19 @@ class TestBotRunner:
 
         # not an admin, public chat
         runner.bot.handle_command("start", FakeMessage(FakeUser(1), "channel"))
-        no_admin_output.append(runner.bot.last_reply)
+        no_admin_output.append(runner.bot.last_reply_text)
 
         # not an admin, private chat
         runner.bot.handle_command("start", FakeMessage(FakeUser(1), "private"))
-        no_admin_output.append(runner.bot.last_reply)
+        no_admin_output.append(runner.bot.last_reply_text)
 
         # admin, public chat
         runner.bot.handle_command("start", FakeMessage(FakeUser(ADMIN1), "channel"))
-        no_admin_output.append(runner.bot.last_reply)
+        no_admin_output.append(runner.bot.last_reply_text)
 
         # admin, public chat
         runner.bot.handle_command("start", FakeMessage(FakeUser(ADMIN1), "private"))
-        admin_output.append(runner.bot.last_reply)
+        admin_output.append(runner.bot.last_reply_text)
 
         for msg in no_admin_output + admin_output:
             for cmd in runner.default_commands:
@@ -162,19 +162,19 @@ class TestBotRunner:
 
         # not an admin, public chat
         runner.bot.handle_command("help", FakeMessage(FakeUser(1), "channel"))
-        no_admin_output.append(runner.bot.last_reply)
+        no_admin_output.append(runner.bot.last_reply_text)
 
         # not an admin, private chat
         runner.bot.handle_command("help", FakeMessage(FakeUser(1), "private"))
-        no_admin_output.append(runner.bot.last_reply)
+        no_admin_output.append(runner.bot.last_reply_text)
 
         # admin, public chat
         runner.bot.handle_command("help", FakeMessage(FakeUser(ADMIN1), "channel"))
-        no_admin_output.append(runner.bot.last_reply)
+        no_admin_output.append(runner.bot.last_reply_text)
 
         # admin, public chat
         runner.bot.handle_command("help", FakeMessage(FakeUser(ADMIN1), "private"))
-        admin_output.append(runner.bot.last_reply)
+        admin_output.append(runner.bot.last_reply_text)
 
         for msg in no_admin_output + admin_output:
             for cmd in runner.default_commands:
@@ -191,7 +191,7 @@ class TestBotRunner:
 
         # goodcase
         runner.bot.handle_command("karte", FakeMessage())
-        msg = runner.bot.last_reply
+        msg = runner.bot.last_reply_text
 
         assert "github" in msg
         assert "menu.pdf" in msg
@@ -200,7 +200,7 @@ class TestBotRunner:
         runner = defaultRunner()
 
         runner.bot.handle_command("termine", FakeMessage())
-        msg = runner.bot.last_reply
+        msg = runner.bot.last_reply_text
         assert "keine" in msg
 
         one_day = timedelta(days=1)
@@ -211,12 +211,12 @@ class TestBotRunner:
         runner.db.create_alfredo_date(yesterday, None, 1)
 
         runner.bot.handle_command("termine", FakeMessage())
-        msg = runner.bot.last_reply
+        msg = runner.bot.last_reply_text
         assert "keine" in msg
 
         runner.db.create_alfredo_date(today, None, 2)
         runner.bot.handle_command("termine", FakeMessage())
-        msg = runner.bot.last_reply
+        msg = runner.bot.last_reply_text
         assert "einzige" in msg
 
         tomorrow = today + one_day
@@ -225,7 +225,7 @@ class TestBotRunner:
         runner.db.create_alfredo_date(overmorrow, None, 4)
 
         runner.bot.handle_command("termine", FakeMessage())
-        msg = runner.bot.last_reply
+        msg = runner.bot.last_reply_text
         assert "nächsten 3 Termine" in msg
         assert msg.count(util.emoji('bullet')) == 3
 
@@ -243,22 +243,22 @@ class TestBotRunner:
         # error 1: no admin
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(1), text="newalfredo 2199-01-01"))
         assert num_dates(runner.db) == 0
-        assert "kein Admin" in runner.bot.last_reply
+        assert "kein Admin" in runner.bot.last_reply_text
 
         # error 2: no param, too many params
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo"))
-        assert "einen Parameter" in runner.bot.last_reply
+        assert "einen Parameter" in runner.bot.last_reply_text
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo "))
-        assert "einen Parameter" in runner.bot.last_reply
+        assert "einen Parameter" in runner.bot.last_reply_text
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01 even more text"))
-        assert "einen Parameter" in runner.bot.last_reply
+        assert "einen Parameter" in runner.bot.last_reply_text
         assert num_dates(runner.db) == 0
 
         # error 3: invalid date
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo not-a-date"))
-        assert "konnte nicht in ein Datum" in runner.bot.last_reply
+        assert "konnte nicht in ein Datum" in runner.bot.last_reply_text
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 30-01-01"))
-        assert "konnte nicht in ein Datum" in runner.bot.last_reply
+        assert "konnte nicht in ein Datum" in runner.bot.last_reply_text
         assert num_dates(runner.db) == 0
 
         # error 4: before today
@@ -267,30 +267,30 @@ class TestBotRunner:
         yesterday = today - one_day
 
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2022-01-01"))
-        assert "frühstens heute" in runner.bot.last_reply
+        assert "frühstens heute" in runner.bot.last_reply_text
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text=f"newalfredo {yesterday.isoformat()}"))
-        assert "frühstens heute" in runner.bot.last_reply
+        assert "frühstens heute" in runner.bot.last_reply_text
         assert num_dates(runner.db) == 0
 
         # error 5: telegram exception
         runner.bot.raise_on_next_action()
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01"))
-        assert "Telegram API" in runner.bot.last_reply
+        assert "Telegram API" in runner.bot.last_reply_text
         assert num_dates(runner.db) == 0
 
         # goodcase
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01"))
-        assert "Umfrage wurde erstellt" in runner.bot.last_reply
+        assert "Umfrage wurde erstellt" in runner.bot.last_reply_text
         assert num_dates(runner.db) == 1
         date_ = runner.db.get_future_dates()[0]
-        assert runner.bot.last_chat_id == GROUP
-        assert util.format_date(date.fromisoformat("2199-01-01")) in runner.bot.last_text
+        assert runner.bot.last_poll_chat_id == GROUP
+        assert util.format_date(date.fromisoformat("2199-01-01")) in runner.bot.last_poll_text
         assert date_.date == date.fromisoformat("2199-01-01")
         assert date_.message_id == 1
 
         # error 6: duplicate
         runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(ADMIN1), text="newalfredo 2199-01-01"))
-        assert "bereits ein Alfredo" in runner.bot.last_reply
+        assert "bereits ein Alfredo" in runner.bot.last_reply_text
         assert num_dates(runner.db) == 1
 
     def test_acmd_announce(self):
@@ -298,24 +298,24 @@ class TestBotRunner:
 
         # error 1: no admin
         runner.bot.handle_command("announce", FakeMessage(FakeUser(1), text="announce message"))
-        assert "kein Admin" in runner.bot.last_reply
+        assert "kein Admin" in runner.bot.last_reply_text
 
         # error 2: no param
         runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce"))
-        assert "Parameter" in runner.bot.last_reply
+        assert "Parameter" in runner.bot.last_reply_text
         runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce "))
-        assert "Parameter" in runner.bot.last_reply
+        assert "Parameter" in runner.bot.last_reply_text
 
         # error 3: telegram exception
         runner.bot.raise_on_next_action()
         runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce Test Test Test"))
-        assert "Telegram API" in runner.bot.last_reply
+        assert "Telegram API" in runner.bot.last_reply_text
 
         # goodcase
         runner.bot.handle_command("announce", FakeMessage(FakeUser(ADMIN1), text="announce Test Test Test"))
-        assert runner.bot.last_chat_id == GROUP
-        assert runner.bot.last_text.endswith("Test Test Test")
-        assert "announce" not in runner.bot.last_text
+        assert runner.bot.last_message_chat_id == GROUP
+        assert runner.bot.last_message_text.endswith("Test Test Test")
+        assert "announce" not in runner.bot.last_message_text
 
     def test_run(self):
         runner = defaultRunner()

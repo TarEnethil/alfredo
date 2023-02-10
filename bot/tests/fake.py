@@ -18,16 +18,16 @@ class FakeBot:
             self.raise_exception = False
             raise Exception("Fake API Error")
 
-        self.last_chat_id = chat_id
-        self.last_text = text
+        self.last_message_chat_id = chat_id
+        self.last_message_text = text
 
     def send_poll(self, chat_id, question, **kwargs):
         if self.raise_exception:
             self.raise_exception = False
             raise Exception("Fake API Error")
 
-        self.last_chat_id = chat_id
-        self.last_text = question
+        self.last_poll_chat_id = chat_id
+        self.last_poll_text = question
 
         self.message_id += 1
         return FakePoll(self.message_id)
@@ -37,7 +37,7 @@ class FakeBot:
             self.raise_exception = False
             raise Exception("Fake API Error")
 
-        self.last_reply = text
+        self.last_reply_text = text
 
     def infinity_polling(self):
         self.is_polling = True
