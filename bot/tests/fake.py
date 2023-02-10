@@ -64,8 +64,10 @@ class FakeChat:
 
 
 class FakeUser:
-    def __init__(self, id_):
+    def __init__(self, id_, first_name, username):
         self.id = id_
+        self.first_name = first_name
+        self.username = username
 
 
 class FakePoll:

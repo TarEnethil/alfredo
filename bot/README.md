@@ -23,6 +23,5 @@ cp config.json.template config.json
 
 # TODO
 * Add comments
-* Add more logging
 * Add auto reminder (day before)
 * Add acmd to cancel a date

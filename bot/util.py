@@ -1,5 +1,6 @@
 import babel.dates
 
+
 emojis = {
     "check": u'\U00002705',
     "cross": u'\U0000274C',
@@ -11,6 +12,11 @@ emojis = {
 
 def format_date(date):
     return babel.dates.format_date(date, format='full', locale='de_DE')
+
+
+def format_user(user):
+    username = f"{user.username}:" if user.username else ""
+    return f"{user.first_name} ({username}{user.id})"
 
 
 def get_version():

@@ -31,6 +31,7 @@ class BotRunner:
         self.init_database(dbfile)
 
     def init_config(self, cfgfile):
+        self.log.info(f"loading config from {cfgfile}")
         if not path.exists(cfgfile):
             raise Exception(f"{cfgfile} does not exist")
 
@@ -47,9 +48,13 @@ class BotRunner:
         self.config = cfg
 
     def init_bot(self, invoker):
+        self.log.info("creating bot")
         self.bot = invoker(self.config["token"])
+
+        self.log.debug("setting bot commands")
         self.bot.set_my_commands(self.default_commands)
 
+        self.log.debug("registering bot message handlers")
         self.bot.register_message_handler(self.cmd_start, commands=['start'])
         self.bot.register_message_handler(self.cmd_help, commands=['help'])
         self.bot.register_message_handler(self.cmd_menu, commands=['karte'])
@@ -59,10 +64,18 @@ class BotRunner:
         self.bot.register_message_handler(self.acmd_announce, commands=['announce'])
 
     def init_database(self, dbfile):
+        self.log.info("initializing database")
         self.db = Database(dbfile)
 
+    def log_command(self, message, admin=False):
+        role = "admin" if self.user_is_admin(message.from_user) else "user"
+        if admin:
+            self.log.info(f"{role} {util.format_user(message.from_user)} sent admin command '{message.text}'")
+        else:
+            self.log.debug(f"{role} {util.format_user(message.from_user)} sent command '{message.text}'")
+
     def send_error(self, reply_to, errmsg):
-        self.log.info(f"sending error reply message: '{errmsg}'")
+        self.log.info(f"sending error reply message to {util.format_user(reply_to.from_user)}: '{errmsg}'")
         self.safe_exec(
             self.bot.reply_to,
             message=reply_to,
@@ -73,6 +86,8 @@ class BotRunner:
         return user.id in self.config["admins"]
 
     def safe_exec(self, func, reraise=False, **kwargs):
+        self.log.debug(f"safe_exec for {func.__name__}")
+
         try:
             return func(**kwargs)
         except Exception as ex:
@@ -82,6 +97,8 @@ class BotRunner:
                 raise ex
 
     def cmd_start(self, message):
+        self.log_command(message)
+
         msg = "Mamma Mia!\n\n"
         msg += "Der AlfredoBot versorgt dich mit allen Informationen rund um die beste Pizza der Welt.\n\n"
         msg += util.li("Verfügbare Kommandos: siehe /help")
@@ -95,6 +112,8 @@ class BotRunner:
         self.safe_exec(self.bot.reply_to, message=message, text=msg, disable_web_page_preview=True)
 
     def cmd_help(self, message):
+        self.log_command(message)
+
         msg = "Verfügbare Kommandos:\n"
 
         for cmd in self.default_commands:
@@ -108,6 +127,8 @@ class BotRunner:
         self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
     def cmd_menu(self, message):
+        self.log_command(message)
+
         url = "https://github.com/TarEnethil/alfredo/releases/latest/download/menu.pdf"
 
         msg = f"Link zur aktuellen Karte: [Link]({url})"
@@ -120,6 +141,8 @@ class BotRunner:
         )
 
     def cmd_show_dates(self, message):
+        self.log_command(message)
+
         dates = self.db.get_future_dates()
         num = len(dates)
 
@@ -137,8 +160,11 @@ class BotRunner:
 
     def acmd_new_alfredo(self, message):
         if not self.user_is_admin(message.from_user):
+            self.log_command(message)
             self.send_error(message, "Du bist kein Admin.")
             return
+
+        self.log_command(message, admin=True)
 
         params = message.text.strip().split(" ")
 
@@ -184,8 +210,11 @@ class BotRunner:
 
     def acmd_announce(self, message):
         if not self.user_is_admin(message.from_user):
+            self.log_command(message)
             self.send_error(message, "Du bist kein Admin.")
             return
+
+        self.log_command(message, admin=True)
 
         params = message.text.strip().split(" ")
 
@@ -210,4 +239,5 @@ class BotRunner:
         self.safe_exec(self.bot.reply_to, message=message, text=f"Ankündigung wurde gesendet {util.emoji('check')}")
 
     def run(self):
+        self.log.info("bot starts polling now")
         self.bot.infinity_polling()

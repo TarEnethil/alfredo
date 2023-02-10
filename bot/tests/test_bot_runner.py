@@ -1,3 +1,4 @@
+import logging
 from datetime import date, timedelta
 import json
 from fake import FakeBot, FakeUser, FakeMessage
@@ -6,11 +7,12 @@ import util
 
 import pytest
 
-ADMIN1 = FakeUser(42)
-ADMIN2 = FakeUser(69)
-USER = FakeUser(1337)
+ADMIN1 = FakeUser(42, "Armin", "DerAdmin")
+ADMIN2 = FakeUser(69, "Bernhard", "b0ss")
+USER = FakeUser(1337, "Dagobert", "DAU")
 GROUP = "-1337"
 TESTCFG = "tests/config-test.json"
+DEFAULT_MESSAGE = FakeMessage(USER)
 
 
 def defaultRunner():
@@ -63,9 +65,44 @@ class TestBotRunner:
 
         assert "at least one admin" in ex.value.args[0]
 
+    def test_log_command(self, caplog):
+        runner = defaultRunner()
+
+        with caplog.at_level(logging.DEBUG):
+            runner.log_command(FakeMessage(USER, text="/command"))
+            assert "/command" in caplog.text
+            assert str(USER.id) in caplog.text
+            assert USER.first_name in caplog.text
+            assert USER.username in caplog.text
+
+            caplog.clear()
+
+            runner.log_command(FakeMessage(ADMIN1, text="/command"))
+            assert "admin" in caplog.text
+            assert "/command" in caplog.text
+            assert str(ADMIN1.id) in caplog.text
+            assert ADMIN1.first_name in caplog.text
+
+            caplog.clear()
+
+        with caplog.at_level(logging.INFO):
+            runner.log_command(FakeMessage(USER, text="/command"))
+            assert "/command" not in caplog.text
+            assert str(USER.id) not in caplog.text
+            assert USER.first_name not in caplog.text
+            assert USER.username not in caplog.text
+
+            caplog.clear()
+
+            runner.log_command(FakeMessage(ADMIN1, text="/acommand"), admin=True)
+            assert "admin" in caplog.text
+            assert "/acommand" in caplog.text
+            assert str(ADMIN1.id) in caplog.text
+            assert ADMIN1.first_name in caplog.text
+
     def test_send_error(self):
         runner = defaultRunner()
-        msg = FakeMessage()
+        msg = DEFAULT_MESSAGE
 
         runner.send_error(msg, "Test")
 
@@ -102,10 +139,10 @@ class TestBotRunner:
 
         # collection of goodcases
         cmds = {
-            "start": FakeMessage(FakeUser(1), "channel"),
-            "help": FakeMessage(FakeUser(1), "channel"),
-            "karte": FakeMessage(),
-            "termine": FakeMessage(),
+            "start": FakeMessage(USER, "channel"),
+            "help": FakeMessage(USER, "channel"),
+            "karte": DEFAULT_MESSAGE,
+            "termine": DEFAULT_MESSAGE,
             "newalfredo": FakeMessage(ADMIN1, text="newalfredo 2199-01-01"),
             "announce": FakeMessage(ADMIN1, text="announce Test Test Test")
         }
@@ -123,11 +160,11 @@ class TestBotRunner:
         admin_output = []
 
         # not an admin, public chat
-        runner.bot.handle_command("start", FakeMessage(FakeUser(1), "channel"))
+        runner.bot.handle_command("start", FakeMessage(USER, "channel"))
         no_admin_output.append(runner.bot.last_reply_text)
 
         # not an admin, private chat
-        runner.bot.handle_command("start", FakeMessage(FakeUser(1), "private"))
+        runner.bot.handle_command("start", FakeMessage(USER, "private"))
         no_admin_output.append(runner.bot.last_reply_text)
 
         # admin, public chat
@@ -158,11 +195,11 @@ class TestBotRunner:
         admin_output = []
 
         # not an admin, public chat
-        runner.bot.handle_command("help", FakeMessage(FakeUser(1), "channel"))
+        runner.bot.handle_command("help", FakeMessage(USER, "channel"))
         no_admin_output.append(runner.bot.last_reply_text)
 
         # not an admin, private chat
-        runner.bot.handle_command("help", FakeMessage(FakeUser(1), "private"))
+        runner.bot.handle_command("help", FakeMessage(USER, "private"))
         no_admin_output.append(runner.bot.last_reply_text)
 
         # admin, public chat
@@ -187,7 +224,7 @@ class TestBotRunner:
         runner = defaultRunner()
 
         # goodcase
-        runner.bot.handle_command("karte", FakeMessage())
+        runner.bot.handle_command("karte", DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
 
         assert "github" in msg
@@ -196,7 +233,7 @@ class TestBotRunner:
     def test_cmd_show_dates(self):
         runner = defaultRunner()
 
-        runner.bot.handle_command("termine", FakeMessage())
+        runner.bot.handle_command("termine", DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
         assert "keine" in msg
 
@@ -207,12 +244,12 @@ class TestBotRunner:
         # add alfredo, but in the past -> no change in output
         runner.db.create_alfredo_date(yesterday, None, 1)
 
-        runner.bot.handle_command("termine", FakeMessage())
+        runner.bot.handle_command("termine", DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
         assert "keine" in msg
 
         runner.db.create_alfredo_date(today, None, 2)
-        runner.bot.handle_command("termine", FakeMessage())
+        runner.bot.handle_command("termine", DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
         assert "einzige" in msg
 
@@ -221,7 +258,7 @@ class TestBotRunner:
         runner.db.create_alfredo_date(tomorrow, None, 3)
         runner.db.create_alfredo_date(overmorrow, None, 4)
 
-        runner.bot.handle_command("termine", FakeMessage())
+        runner.bot.handle_command("termine", DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
         assert "nächsten 3 Termine" in msg
         assert msg.count(util.emoji('bullet')) == 3
@@ -238,7 +275,7 @@ class TestBotRunner:
         runner = defaultRunner()
 
         # error 1: no admin
-        runner.bot.handle_command("newalfredo", FakeMessage(FakeUser(1), text="newalfredo 2199-01-01"))
+        runner.bot.handle_command("newalfredo", FakeMessage(USER, text="newalfredo 2199-01-01"))
         assert num_dates(runner.db) == 0
         assert "kein Admin" in runner.bot.last_reply_text
 
@@ -294,7 +331,7 @@ class TestBotRunner:
         runner = defaultRunner()
 
         # error 1: no admin
-        runner.bot.handle_command("announce", FakeMessage(FakeUser(1), text="announce message"))
+        runner.bot.handle_command("announce", FakeMessage(USER, text="announce message"))
         assert "kein Admin" in runner.bot.last_reply_text
 
         # error 2: no param

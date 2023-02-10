@@ -1,6 +1,8 @@
 from datetime import date
 import util
 
+from fake import FakeUser
+
 
 class TestUtil:
     def test_format_date(self):
@@ -10,6 +12,17 @@ class TestUtil:
         assert "Sonntag" in fmt
         assert "1. Januar" in fmt
         assert "2023" in fmt
+
+    def test_format_user(self):
+        fmt = util.format_user(FakeUser(1, "Firstname", "Username"))
+
+        assert "1" in fmt
+        assert "Firstname" in fmt
+        assert "Username" in fmt
+
+        # username is technially optional
+        fmt = util.format_user(FakeUser(1, "Firstname", None))
+        assert "None" not in fmt
 
     def test_get_version(self):
         assert util.get_version() is not None
