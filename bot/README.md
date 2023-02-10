@@ -19,7 +19,7 @@ cp config.json.template config.json
 # Dev
 * Lint: `flake8 .`
 * Tests: `./run_tests.sh` 
-* Coverage: `./coverage.sh`
+* Coverage: `./coverage.sh <html|report>`
 
 # TODO
 * Add comments

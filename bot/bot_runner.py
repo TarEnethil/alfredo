@@ -19,7 +19,7 @@ class BotRunner:
     ]
 
     admin_commands = [
-        telebot.types.BotCommand("newalfredo", "<iso-date> Umfrage für neuen Alfredotermin starten"),
+        telebot.types.BotCommand("newalfredo", "<iso-date> Umfrage für neuen Alfredotermin posten"),
         telebot.types.BotCommand("announce", "<announcement> Ankündigung in der Gruppe posten")
     ]
 
