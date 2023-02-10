@@ -89,6 +89,9 @@ class BotRunner:
         msg += util.li(f"Version: {util.get_version()}")
         msg += util.li("Bugreports: https://github.com/TarEnethil/alfredo/issues")
 
+        if self.user_is_admin(message.from_user) and message.chat.type == "private":
+            msg += "\n\nDu bist ein Admin!"
+
         self.safe_exec(self.bot.reply_to, message=message, text=msg, disable_web_page_preview=True)
 
     def cmd_help(self, message):

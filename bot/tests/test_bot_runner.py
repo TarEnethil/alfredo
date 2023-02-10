@@ -105,7 +105,7 @@ class TestBotRunner:
 
         # collection of goodcases
         cmds = {
-            "start": FakeMessage(),
+            "start": FakeMessage(FakeUser(1), "channel"),
             "help": FakeMessage(FakeUser(1), "channel"),
             "karte": FakeMessage(),
             "termine": FakeMessage(),
@@ -122,13 +122,37 @@ class TestBotRunner:
     def test_cmd_start(self):
         runner = defaultRunner()
 
-        runner.bot.handle_command("start", FakeMessage())
-        msg = runner.bot.last_reply
+        no_admin_output = []
+        admin_output = []
 
-        assert "/help" in msg
-        assert "Maintainer" in msg
-        assert "Version" in msg
-        assert "github in msg"
+        # not an admin, public chat
+        runner.bot.handle_command("start", FakeMessage(FakeUser(1), "channel"))
+        no_admin_output.append(runner.bot.last_reply)
+
+        # not an admin, private chat
+        runner.bot.handle_command("start", FakeMessage(FakeUser(1), "private"))
+        no_admin_output.append(runner.bot.last_reply)
+
+        # admin, public chat
+        runner.bot.handle_command("start", FakeMessage(FakeUser(ADMIN1), "channel"))
+        no_admin_output.append(runner.bot.last_reply)
+
+        # admin, public chat
+        runner.bot.handle_command("start", FakeMessage(FakeUser(ADMIN1), "private"))
+        admin_output.append(runner.bot.last_reply)
+
+        for msg in no_admin_output + admin_output:
+            for cmd in runner.default_commands:
+                assert "/help" in msg
+                assert "Maintainer" in msg
+                assert "Version" in msg
+                assert "github" in msg
+
+        for msg in no_admin_output:
+            assert "Admin" not in msg
+
+        for msg in admin_output:
+            assert "Admin" in msg
 
     def test_cmd_help(self):
         runner = defaultRunner()
