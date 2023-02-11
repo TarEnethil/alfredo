@@ -33,8 +33,11 @@ class Database:
 
         return dates
 
-    def check_date_is_free(self, date):
+    def get_by_date(self, date):
         with Session(self.engine) as session:
-            existing = session.scalars(select(AlfredoDate).where(AlfredoDate.date.is_(date))).first()
+            return session.scalars(select(AlfredoDate).where(AlfredoDate.date.is_(date))).first()
 
-        return existing is None
+    def delete_date(self, date):
+        with Session(self.engine) as session:
+            session.delete(date)
+            session.commit()

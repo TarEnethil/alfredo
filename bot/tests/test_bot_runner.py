@@ -19,6 +19,17 @@ def defaultRunner():
     return BotRunner(TESTCFG, FakeBot, ":memory:")
 
 
+def assert_num_dates(db, num):
+    from models import AlfredoDate
+    from sqlalchemy import select, func
+    from sqlalchemy.orm import Session
+
+    with Session(db.engine) as session:
+        dates = session.scalars(select(func.count()).select_from(AlfredoDate)).first()
+
+    assert dates == num
+
+
 class TestBotRunner:
     def test_basic(self):
         runner = defaultRunner()
@@ -144,7 +155,8 @@ class TestBotRunner:
             "karte": DEFAULT_MESSAGE,
             "termine": DEFAULT_MESSAGE,
             "newalfredo": FakeMessage(ADMIN1, text="newalfredo 2199-01-01"),
-            "announce": FakeMessage(ADMIN1, text="announce Test Test Test")
+            "announce": FakeMessage(ADMIN1, text="announce Test Test Test"),
+            "cancel": FakeMessage(ADMIN1, text="cancel 2199-01-01")
         }
 
         assert len(cmds) == len(runner.default_commands) + len(runner.admin_commands)
@@ -264,19 +276,11 @@ class TestBotRunner:
         assert msg.count(util.emoji('bullet')) == 3
 
     def test_acmd_new_alfredo(self):
-        def num_dates(db):
-            from models import AlfredoDate
-            from sqlalchemy import select, func
-            from sqlalchemy.orm import Session
-
-            with Session(db.engine) as session:
-                return session.scalars(select(func.count()).select_from(AlfredoDate)).first()
-
         runner = defaultRunner()
 
         # error 1: no admin
         runner.bot.handle_command("newalfredo", FakeMessage(USER, text="newalfredo 2199-01-01"))
-        assert num_dates(runner.db) == 0
+        assert_num_dates(runner.db, 0)
         assert "kein Admin" in runner.bot.last_reply_text
 
         # error 2: no param, too many params
@@ -286,14 +290,14 @@ class TestBotRunner:
         assert "einen Parameter" in runner.bot.last_reply_text
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01 even more text"))
         assert "einen Parameter" in runner.bot.last_reply_text
-        assert num_dates(runner.db) == 0
+        assert_num_dates(runner.db, 0)
 
         # error 3: invalid date
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo not-a-date"))
         assert "konnte nicht in ein Datum" in runner.bot.last_reply_text
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 30-01-01"))
         assert "konnte nicht in ein Datum" in runner.bot.last_reply_text
-        assert num_dates(runner.db) == 0
+        assert_num_dates(runner.db, 0)
 
         # error 4: before today
         one_day = timedelta(days=1)
@@ -304,18 +308,18 @@ class TestBotRunner:
         assert "frühstens heute" in runner.bot.last_reply_text
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {yesterday.isoformat()}"))
         assert "frühstens heute" in runner.bot.last_reply_text
-        assert num_dates(runner.db) == 0
+        assert_num_dates(runner.db, 0)
 
         # error 5: telegram exception
         runner.bot.raise_on_next_action()
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
         assert "Telegram API" in runner.bot.last_reply_text
-        assert num_dates(runner.db) == 0
+        assert_num_dates(runner.db, 0)
 
         # goodcase
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
         assert "Umfrage wurde erstellt" in runner.bot.last_reply_text
-        assert num_dates(runner.db) == 1
+        assert_num_dates(runner.db, 1)
         date_ = runner.db.get_future_dates()[0]
         assert runner.bot.last_poll_chat_id == GROUP
         assert util.format_date(date.fromisoformat("2199-01-01")) in runner.bot.last_poll_text
@@ -325,7 +329,72 @@ class TestBotRunner:
         # error 6: duplicate
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
         assert "bereits ein Alfredo" in runner.bot.last_reply_text
-        assert num_dates(runner.db) == 1
+        assert_num_dates(runner.db, 1)
+
+    def test_acmd_cancel(self):
+        runner = defaultRunner()
+
+        runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
+        assert_num_dates(runner.db, 1)
+
+        # error 1: no admin
+        runner.bot.handle_command("cancel", FakeMessage(USER, text="cancel 2199-01-01"))
+        assert_num_dates(runner.db, 1)
+        assert "kein Admin" in runner.bot.last_reply_text
+
+        # error 2: no param, too many params
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel"))
+        assert "einen Parameter" in runner.bot.last_reply_text
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel "))
+        assert "einen Parameter" in runner.bot.last_reply_text
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel 2199-01-01 even more text"))
+        assert "einen Parameter" in runner.bot.last_reply_text
+        assert_num_dates(runner.db, 1)
+
+        # error 3: invalid date
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel not-a-date"))
+        assert "konnte nicht in ein Datum" in runner.bot.last_reply_text
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel 30-01-01"))
+        assert "konnte nicht in ein Datum" in runner.bot.last_reply_text
+        assert_num_dates(runner.db, 1)
+
+        # error 4: before today
+        one_day = timedelta(days=1)
+        today = date.today()
+        yesterday = today - one_day
+
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel 2022-01-01"))
+        assert "in der Zukunft" in runner.bot.last_reply_text
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text=f"cancel {yesterday.isoformat()}"))
+        assert "in der Zukunft" in runner.bot.last_reply_text
+        assert_num_dates(runner.db, 1)
+
+        assert runner.bot.polls[1] is True
+
+        # error 5: telegram exception
+        runner.bot.raise_on_next_action(1)
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel 2199-01-01"))
+        assert runner.bot.last_reply_text.count(util.emoji('cross')) == 1
+        assert runner.bot.last_reply_text.count(util.emoji('check')) == 2
+        assert runner.bot.polls[1] is False
+        assert_num_dates(runner.db, 0)
+
+        # error 5.1: 2 telegram exceptions
+        runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
+        runner.bot.raise_on_next_action(2)
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel 2199-01-01"))
+        assert runner.bot.last_reply_text.count(util.emoji('cross')) == 2
+        assert runner.bot.last_reply_text.count(util.emoji('check')) == 1
+        assert runner.bot.polls[2] is True
+        assert_num_dates(runner.db, 0)
+
+        # goodcase
+        runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
+        runner.bot.handle_command("cancel", FakeMessage(ADMIN1, text="cancel 2199-01-01"))
+        assert runner.bot.last_reply_text.count(util.emoji('cross')) == 0
+        assert runner.bot.last_reply_text.count(util.emoji('check')) == 3
+        assert runner.bot.polls[3] is False
+        assert_num_dates(runner.db, 0)
 
     def test_acmd_announce(self):
         runner = defaultRunner()

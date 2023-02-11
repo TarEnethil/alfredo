@@ -18,10 +18,9 @@ cp config.json.template config.json
 
 # Dev
 * Lint: `flake8 .`
-* Tests: `./run_tests.sh` 
+* Tests: `./run_tests.sh`
 * Coverage: `./coverage.sh <html|report>`
 
 # TODO
 * Add comments
 * Add auto reminder (day before)
-* Add acmd to cancel a date

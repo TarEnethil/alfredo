@@ -20,6 +20,7 @@ class BotRunner:
 
     admin_commands = [
         telebot.types.BotCommand("newalfredo", "<iso-date>: Umfrage für neuen Alfredotermin posten"),
+        telebot.types.BotCommand("cancel", "<iso-date>: Alfredotermin absagen"),
         telebot.types.BotCommand("announce", "<announcement>: Ankündigung in der Gruppe posten")
     ]
 
@@ -61,6 +62,7 @@ class BotRunner:
         self.bot.register_message_handler(self.cmd_show_dates, commands=["termine"])
 
         self.bot.register_message_handler(self.acmd_new_alfredo, commands=['newalfredo'])
+        self.bot.register_message_handler(self.acmd_cancel, commands=['cancel'])
         self.bot.register_message_handler(self.acmd_announce, commands=['announce'])
 
     def init_database(self, dbfile):
@@ -184,7 +186,7 @@ class BotRunner:
             self.send_error(message, "Datum darf frühstens heute sein.")
             return
 
-        if self.db.check_date_is_free(date_) is False:
+        if self.db.get_by_date(date_) is not None:
             msg = f"An diesem Termin ist bereits ein Alfredo eingetragen ({util.format_date(date_)})"
             self.send_error(message, msg)
             return
@@ -207,6 +209,68 @@ class BotRunner:
         self.db.create_alfredo_date(date_, description, poll.message_id)
 
         self.safe_exec(self.bot.reply_to, message=message, text=f"Umfrage wurde erstellt {util.emoji('check')}")
+
+    def acmd_cancel(self, message):  # noqa: C901
+        if not self.user_is_admin(message.from_user):
+            self.log_command(message)
+            self.send_error(message, "Du bist kein Admin.")
+            return
+
+        self.log_command(message, admincmd=True)
+
+        params = message.text.strip().split(" ")
+
+        if len(params) != 2:
+            self.send_error(message, f"Befehl erwartet nur einen Parameter, geparsed wurden {len(params) - 1}")
+            return
+
+        try:
+            date_ = date.fromisoformat(params[1])
+        except ValueError as verr:
+            self.send_error(message, f"String konnte nicht in ein Datum konvertiert werden: {verr}")
+            return
+
+        today = date.today()
+
+        if date_ <= today:
+            self.send_error(message, "Man kann nur Termine in der Zukunft absagen")
+            return
+
+        row = self.db.get_by_date(date_)
+        if row is None:
+            msg = f"An diesem Termin ist kein Alfredo eingetragen ({util.format_date(date_)})"
+            self.send_error(message, msg)
+            return
+
+        msg = ""
+        try:
+            text = f"Der Alfredo am {util.format_date(row.date)} wurde leider abgesagt {util.emoji('frowning')}"
+            self.safe_exec(
+                self.bot.send_message,
+                reraise=True,
+                chat_id=self.config["group"],
+                text=text,
+                reply_to_message_id=row.message_id
+            )
+            msg += util.li(f"{util.emoji('check')} Absage gesendet")
+        except Exception as ex:
+            msg += util.li(f"{util.emoji('cross')} Absage senden fehlgeschlagen: {ex}")
+
+        try:
+            self.safe_exec(
+                self.bot.stop_poll,
+                reraise=True,
+                chat_id=self.config["group"],
+                message_id=row.message_id
+            )
+            msg += util.li(f"{util.emoji('check')} Umfrage gestoppt")
+        except Exception as ex:
+            msg += util.li(f"{util.emoji('cross')} Umfrage stoppen fehlgeschlagen: {ex}")
+
+        self.db.delete_date(row)
+        msg += util.li(f"{util.emoji('check')} Aus Datenbank entfernt")
+
+        self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
     def acmd_announce(self, message):
         if not self.user_is_admin(message.from_user):

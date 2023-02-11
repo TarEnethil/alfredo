@@ -94,12 +94,27 @@ class TestDatabase:
         assert future_dates[1].message_id == 3
         assert future_dates[2].message_id == 4
 
-    def test_check_date_is_free(self):
+    def test_get_by_date(self):
         db = in_memory_db()
 
         add_default_dates(db)
 
-        assert db.check_date_is_free(date.fromisoformat("2001-02-03")) is False
+        d = db.get_by_date(date.fromisoformat("2001-02-03"))
+        assert d is not None
+        assert d.id == 1
+
+        assert db.get_by_date(date.fromisoformat("2002-02-03")) is None
+
+    def test_delete_date(self):
+        db = in_memory_db()
+
+        add_default_dates(db)
+        d = db.get_by_date(date.fromisoformat("2001-02-03"))
+        assert d is not None
+
+        db.delete_date(d)
+        d = db.get_by_date(date.fromisoformat("2001-02-03"))
+        assert d is None
 
     def test_reopen_db(self, tmp_path):
         f = tmp_path / "database.sqlite"
