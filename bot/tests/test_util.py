@@ -37,6 +37,16 @@ class TestUtil:
 
         assert util.emoji("does_not_exist") == ""
 
+    def test_success(self):
+        succ = util.success("Test")
+        assert "Test" in succ
+        assert util.emoji("check") in succ
+
+    def test_failure(self):
+        fail = util.failure("Test")
+        assert "Test" in fail
+        assert util.emoji("cross") in fail
+
     def test_li(self):
         s = util.li("test")
 

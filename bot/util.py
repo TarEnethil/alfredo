@@ -30,5 +30,13 @@ def emoji(emo):
         return ""
 
 
+def success(msg):
+    return f"{emoji('check')} {msg}"
+
+
+def failure(msg):
+    return f"{emoji('cross')} {msg}"
+
+
 def li(string):
     return f"{emoji('bullet')} {string}\n"

@@ -319,6 +319,7 @@ class TestBotRunner:
         # goodcase
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
         assert "Umfrage wurde erstellt" in runner.bot.last_reply_text
+        assert util.emoji("check") in runner.bot.last_reply_text
         assert_num_dates(runner.db, 1)
         date_ = runner.db.get_future_dates()[0]
         assert runner.bot.last_poll_chat_id == GROUP
@@ -416,7 +417,8 @@ class TestBotRunner:
 
         # goodcase
         runner.bot.handle_command("announce", FakeMessage(ADMIN1, text="announce Test Test Test"))
-        assert "Ankündigung wurde gesendet" in runner.bot.last_reply_text
+        assert "Ankündigung gesendet" in runner.bot.last_reply_text
+        assert util.emoji("check") in runner.bot.last_reply_text
         assert runner.bot.last_message_chat_id == GROUP
         assert runner.bot.last_message_text.endswith("Test Test Test")
         assert "announce" not in runner.bot.last_message_text

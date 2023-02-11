@@ -81,7 +81,7 @@ class BotRunner:
         self.safe_exec(
             self.bot.reply_to,
             message=reply_to,
-            text=f"{util.emoji('cross')} Fehler: {errmsg}"
+            text=util.failure(f"Fehler: {errmsg}")
         )
 
     def user_is_admin(self, user):
@@ -208,7 +208,7 @@ class BotRunner:
 
         self.db.create_alfredo_date(date_, description, poll.message_id)
 
-        self.safe_exec(self.bot.reply_to, message=message, text=f"Umfrage wurde erstellt {util.emoji('check')}")
+        self.safe_exec(self.bot.reply_to, message=message, text=util.success("Umfrage wurde erstellt"))
 
     def acmd_cancel(self, message):  # noqa: C901
         if not self.user_is_admin(message.from_user):
@@ -252,9 +252,9 @@ class BotRunner:
                 text=text,
                 reply_to_message_id=row.message_id
             )
-            msg += util.li(f"{util.emoji('check')} Absage gesendet")
+            msg += util.li(util.success("Absage gesendet"))
         except Exception as ex:
-            msg += util.li(f"{util.emoji('cross')} Absage senden fehlgeschlagen: {ex}")
+            msg += util.li(util.failure(f"Absage gesendet ({ex})"))
 
         try:
             self.safe_exec(
@@ -263,12 +263,12 @@ class BotRunner:
                 chat_id=self.config["group"],
                 message_id=row.message_id
             )
-            msg += util.li(f"{util.emoji('check')} Umfrage gestoppt")
+            msg += util.li(util.success("Umfrage gestoppt"))
         except Exception as ex:
-            msg += util.li(f"{util.emoji('cross')} Umfrage stoppen fehlgeschlagen: {ex}")
+            msg += util.li(util.failure(f"Umfrage gestoppt ({ex})"))
 
         self.db.delete_date(row)
-        msg += util.li(f"{util.emoji('check')} Aus Datenbank entfernt")
+        msg += util.li(util.success("Aus Datenbank entfernt"))
 
         self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
@@ -300,7 +300,7 @@ class BotRunner:
             self.send_error(message, f"Telegram API meldete einen Fehler: {ex}")
             return
 
-        self.safe_exec(self.bot.reply_to, message=message, text=f"Ankündigung wurde gesendet {util.emoji('check')}")
+        self.safe_exec(self.bot.reply_to, message=message, text=util.success("Ankündigung gesendet"))
 
     def run(self):
         self.log.info("bot starts polling now")
