@@ -19,8 +19,8 @@ class BotRunner:
     ]
 
     admin_commands = [
-        telebot.types.BotCommand("newalfredo", "<iso-date> Umfrage für neuen Alfredotermin posten"),
-        telebot.types.BotCommand("announce", "<announcement> Ankündigung in der Gruppe posten")
+        telebot.types.BotCommand("newalfredo", "<iso-date>: Umfrage für neuen Alfredotermin posten"),
+        telebot.types.BotCommand("announce", "<announcement>: Ankündigung in der Gruppe posten")
     ]
 
     def __init__(self, cfgfile, bot_invoker, dbfile):
@@ -67,9 +67,9 @@ class BotRunner:
         self.log.info("initializing database")
         self.db = Database(dbfile)
 
-    def log_command(self, message, admin=False):
+    def log_command(self, message, admincmd=False):
         role = "admin" if self.user_is_admin(message.from_user) else "user"
-        if admin:
+        if admincmd:
             self.log.info(f"{role} {util.format_user(message.from_user)} sent admin command '{message.text}'")
         else:
             self.log.debug(f"{role} {util.format_user(message.from_user)} sent command '{message.text}'")
@@ -164,7 +164,7 @@ class BotRunner:
             self.send_error(message, "Du bist kein Admin.")
             return
 
-        self.log_command(message, admin=True)
+        self.log_command(message, admincmd=True)
 
         params = message.text.strip().split(" ")
 
@@ -214,7 +214,7 @@ class BotRunner:
             self.send_error(message, "Du bist kein Admin.")
             return
 
-        self.log_command(message, admin=True)
+        self.log_command(message, admincmd=True)
 
         params = message.text.strip().split(" ")
 

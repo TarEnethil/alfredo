@@ -94,7 +94,7 @@ class TestBotRunner:
 
             caplog.clear()
 
-            runner.log_command(FakeMessage(ADMIN1, text="/acommand"), admin=True)
+            runner.log_command(FakeMessage(ADMIN1, text="/acommand"), admincmd=True)
             assert "admin" in caplog.text
             assert "/acommand" in caplog.text
             assert str(ADMIN1.id) in caplog.text

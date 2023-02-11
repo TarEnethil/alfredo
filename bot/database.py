@@ -11,9 +11,9 @@ class Database:
         self.log = logging.getLogger("Database")
 
         if os.path.isfile(output_file):
-            self.log.info(f"Loading Database {output_file}")
+            self.log.info(f"loading Database {output_file}")
         else:
-            self.log.info(f"Creating Database {output_file}")
+            self.log.info(f"creating Database {output_file}")
 
         self.engine = create_engine(f"sqlite:///{output_file}", echo=False, future=True)
         Base.metadata.create_all(self.engine)
