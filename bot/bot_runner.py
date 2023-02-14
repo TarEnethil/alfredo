@@ -1,5 +1,6 @@
 import logging
 import json
+import signal
 from os import path
 from datetime import date, timedelta
 
@@ -31,6 +32,7 @@ class BotRunner:
         self.init_config(cfgfile)
         self.init_bot(bot_invoker)
         self.init_database(dbfile)
+        self.register_signal_handlers()
 
     def init_config(self, cfgfile):
         self.log.info(f"loading config from {cfgfile}")
@@ -70,6 +72,9 @@ class BotRunner:
     def init_database(self, dbfile):
         self.log.info("initializing database")
         self.db = Database(dbfile)
+
+    def register_signal_handlers(self):
+        signal.signal(signal.SIGUSR1, self.signal_reminder)
 
     def log_command(self, message, admincmd=False):
         role = "admin" if self.user_is_admin(message.from_user) else "user"
@@ -230,7 +235,7 @@ class BotRunner:
 
         msg = ""
         try:
-            text = "Attenzione!\n\nWer heute ein Kreuz setzt muss morgen nicht hungern!"
+            text = "Attenzione!\n\nWer heute ein Kreuz setzt, muss morgen nicht hungern!"
             self.safe_exec(
                 self.bot.send_message,
                 reraise=True,
@@ -335,6 +340,29 @@ class BotRunner:
             return
 
         self.safe_exec(self.bot.reply_to, message=message, text=util.success("Ankündigung gesendet"))
+
+    def signal_reminder(self, signum, frame):
+        tomorrow = date.today() + timedelta(days=1)
+
+        row = self.db.get_by_date(tomorrow)
+        if row is None:
+            # silently return
+            return
+
+        try:
+            text = "Attenzione!\n\nWer heute ein Kreuz setzt, muss morgen nicht hungern!"
+            self.safe_exec(
+                self.bot.send_message,
+                reraise=True,
+                chat_id=self.config["group"],
+                text=text,
+                reply_to_message_id=row.message_id
+            )
+        except Exception as ex:
+            self.log.error(f"Telegram API error when sending reminder for tomrrow: ({ex})")
+            return
+
+        self.log.info(f"Sent reminder for {util.format_date(row.date)}")
 
     def run(self):
         self.log.info("bot starts polling now")

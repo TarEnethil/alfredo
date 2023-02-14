@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 
-python -m pytest
+python -m pytest -s

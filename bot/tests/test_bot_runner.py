@@ -4,6 +4,7 @@ import json
 from fake import FakeBot, FakeUser, FakeMessage
 from bot_runner import BotRunner
 import util
+import signal
 
 import pytest
 
@@ -460,6 +461,32 @@ class TestBotRunner:
         assert runner.bot.last_message_chat_id == GROUP
         assert runner.bot.last_message_text.endswith("Test Test Test")
         assert COMMAND not in runner.bot.last_message_text
+
+    def test_signal_handler(self, caplog):
+        runner = defaultRunner()
+
+        with caplog.at_level(logging.DEBUG):
+            runner.log_command(FakeMessage(USER, text="/command"))
+            # error 1: no date tomorrow (silent, but no error either)
+            signal.raise_signal(signal.SIGUSR1)
+
+            tomorrow = date.today() + timedelta(days=1)
+            runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {tomorrow.isoformat()}"))
+            assert_num_dates(runner.db, 1)
+
+            # error 2: telegram API
+            runner.bot.raise_on_next_action()
+            signal.raise_signal(signal.SIGUSR1)
+            assert "Telegram API" in caplog.text
+
+            caplog.clear()
+
+            # goodcase
+            signal.raise_signal(signal.SIGUSR1)
+            assert runner.bot.last_reply_text.count(util.emoji('check')) == 1
+            assert runner.bot.last_message_chat_id == GROUP
+            assert "Attenzione" in runner.bot.last_message_text
+            assert "Sent reminder" in caplog.text
 
     def test_run(self):
         runner = defaultRunner()
