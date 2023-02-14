@@ -24,3 +24,4 @@ cp config.json.template config.json
 # TODO
 * Add comments
 * Add auto reminder (day before)
+* Add .ics
