@@ -1,7 +1,7 @@
 import logging
 import json
 from os import path
-from datetime import date
+from datetime import date, timedelta
 
 import util
 
@@ -20,6 +20,7 @@ class BotRunner:
 
     admin_commands = [
         telebot.types.BotCommand("newalfredo", "<iso-date>: Umfrage für neuen Alfredotermin posten"),
+        telebot.types.BotCommand("reminder", ": Erinnerung für den morgigen Termin posten"),
         telebot.types.BotCommand("cancel", "<iso-date>: Alfredotermin absagen"),
         telebot.types.BotCommand("announce", "<announcement>: Ankündigung in der Gruppe posten")
     ]
@@ -62,6 +63,7 @@ class BotRunner:
         self.bot.register_message_handler(self.cmd_show_dates, commands=["termine"])
 
         self.bot.register_message_handler(self.acmd_new_alfredo, commands=['newalfredo'])
+        self.bot.register_message_handler(self.acmd_reminder, commands=['reminder'])
         self.bot.register_message_handler(self.acmd_cancel, commands=['cancel'])
         self.bot.register_message_handler(self.acmd_announce, commands=['announce'])
 
@@ -209,6 +211,38 @@ class BotRunner:
         self.db.create_alfredo_date(date_, description, poll.message_id)
 
         self.safe_exec(self.bot.reply_to, message=message, text=util.success("Umfrage wurde erstellt"))
+
+    def acmd_reminder(self, message):
+        if not self.user_is_admin(message.from_user):
+            self.log_command(message)
+            self.send_error(message, "Du bist kein Admin.")
+            return
+
+        self.log_command(message, admincmd=True)
+
+        tomorrow = date.today() + timedelta(days=1)
+
+        row = self.db.get_by_date(tomorrow)
+        if row is None:
+            msg = f"Für den morgigen Tag ist kein Alfredo angekündigt ({util.format_date(tomorrow)})"
+            self.send_error(message, msg)
+            return
+
+        msg = ""
+        try:
+            text = "Attenzione!\n\nWer heute ein Kreuz setzt muss morgen nicht hungern!"
+            self.safe_exec(
+                self.bot.send_message,
+                reraise=True,
+                chat_id=self.config["group"],
+                text=text,
+                reply_to_message_id=row.message_id
+            )
+        except Exception as ex:
+            self.send_error(message, f"Telegram API meldete einen Fehler: ({ex})")
+            return
+
+        self.safe_exec(self.bot.reply_to, message=message, text=util.success("Absage gesendet"))
 
     def acmd_cancel(self, message):  # noqa: C901
         if not self.user_is_admin(message.from_user):

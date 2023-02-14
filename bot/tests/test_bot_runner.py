@@ -148,15 +148,18 @@ class TestBotRunner:
     def test_cms_with_execption(self):
         runner = defaultRunner()
 
+        tomorrow = date.today() + timedelta(days=1)
+
         # collection of goodcases
         cmds = {
             "start": FakeMessage(USER, "channel"),
             "help": FakeMessage(USER, "channel"),
             "karte": DEFAULT_MESSAGE,
             "termine": DEFAULT_MESSAGE,
-            "newalfredo": FakeMessage(ADMIN1, text="newalfredo 2199-01-01"),
+            "newalfredo": FakeMessage(ADMIN1, text=f"newalfredo {tomorrow.isoformat()}"),
+            "reminder": FakeMessage(ADMIN1, text="reminder"),
             "announce": FakeMessage(ADMIN1, text="announce Test Test Test"),
-            "cancel": FakeMessage(ADMIN1, text="cancel 2199-01-01")
+            "cancel": FakeMessage(ADMIN1, text=f"cancel {tomorrow.isoformat()}")
         }
 
         assert len(cmds) == len(runner.default_commands) + len(runner.admin_commands)
@@ -331,6 +334,33 @@ class TestBotRunner:
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
         assert "bereits ein Alfredo" in runner.bot.last_reply_text
         assert_num_dates(runner.db, 1)
+
+    def test_acmd_reminder(self):
+        runner = defaultRunner()
+
+        # error 1: no admin
+        runner.bot.handle_command("reminder", FakeMessage(USER, text="reminder"))
+        assert "kein Admin" in runner.bot.last_reply_text
+
+        # error 2: no date tomorrow
+        runner.bot.handle_command("reminder", FakeMessage(ADMIN1, text="reminder"))
+        assert "morgigen Tag ist kein Alfredo" in runner.bot.last_reply_text
+
+        tomorrow = date.today() + timedelta(days=1)
+        runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {tomorrow.isoformat()}"))
+        assert_num_dates(runner.db, 1)
+
+        # error 3: telegram exception
+        runner.bot.raise_on_next_action()
+        runner.bot.handle_command("reminder", FakeMessage(ADMIN1, text="reminder"))
+        assert runner.bot.last_reply_text.count(util.emoji('cross')) == 1
+        assert "Telegram API" in runner.bot.last_reply_text
+
+        # goodcase
+        runner.bot.handle_command("reminder", FakeMessage(ADMIN1, text="reminder"))
+        assert runner.bot.last_reply_text.count(util.emoji('check')) == 1
+        assert runner.bot.last_message_chat_id == GROUP
+        assert "Attenzione" in runner.bot.last_message_text
 
     def test_acmd_cancel(self):
         runner = defaultRunner()
