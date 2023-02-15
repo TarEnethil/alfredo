@@ -16,6 +16,9 @@ cp config.json.template config.json
 # Run Bot
 * `./bot.py`
 
+# Autoreminder
+* send SIGUSR1 to automatically send a reminder for tomorrow's date (if it exists)
+
 # Dev
 * Lint: `flake8 .`
 * Tests: `./run_tests.sh`
@@ -23,5 +26,4 @@ cp config.json.template config.json
 
 # TODO
 * Add comments
-* Add auto reminder (day before)
 * Add .ics
