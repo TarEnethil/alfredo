@@ -168,14 +168,8 @@ class BotRunner:
 
         self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
+    @util.admin_command_check()
     def acmd_new_alfredo(self, message):
-        if not self.user_is_admin(message.from_user):
-            self.log_command(message)
-            self.send_error(message, "Du bist kein Admin.")
-            return
-
-        self.log_command(message, admincmd=True)
-
         params = message.text.strip().split(" ")
 
         if len(params) != 2:
@@ -218,14 +212,8 @@ class BotRunner:
 
         self.safe_exec(self.bot.reply_to, message=message, text=util.success("Umfrage wurde erstellt"))
 
+    @util.admin_command_check()
     def acmd_reminder(self, message):
-        if not self.user_is_admin(message.from_user):
-            self.log_command(message)
-            self.send_error(message, "Du bist kein Admin.")
-            return
-
-        self.log_command(message, admincmd=True)
-
         tomorrow = date.today() + timedelta(days=1)
 
         row = self.db.get_by_date(tomorrow)
@@ -250,14 +238,8 @@ class BotRunner:
 
         self.safe_exec(self.bot.reply_to, message=message, text=util.success("Erinnerung gesendet"))
 
+    @util.admin_command_check()
     def acmd_cancel(self, message):  # noqa: C901
-        if not self.user_is_admin(message.from_user):
-            self.log_command(message)
-            self.send_error(message, "Du bist kein Admin.")
-            return
-
-        self.log_command(message, admincmd=True)
-
         params = message.text.strip().split(" ")
 
         if len(params) != 2:
@@ -312,14 +294,8 @@ class BotRunner:
 
         self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
+    @util.admin_command_check()
     def acmd_announce(self, message):
-        if not self.user_is_admin(message.from_user):
-            self.log_command(message)
-            self.send_error(message, "Du bist kein Admin.")
-            return
-
-        self.log_command(message, admincmd=True)
-
         params = message.text.strip().split(" ")
 
         if len(params) < 2:

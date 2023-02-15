@@ -1,5 +1,5 @@
+from functools import wraps
 import babel.dates
-
 
 emojis = {
     "check": u'\U00002705',
@@ -40,3 +40,20 @@ def failure(msg):
 
 def li(string):
     return f"{emoji('bullet')} {string}\n"
+
+
+def admin_command_check():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(self, *args, **kwargs):
+            message = args[0]
+
+            if not self.user_is_admin(message.from_user):
+                self.log_command(message)
+                self.send_error(message, "Du bist kein Admin.")
+                return
+
+            self.log_command(message, admincmd=True)
+            return f(self, message)
+        return decorated_function
+    return decorator
