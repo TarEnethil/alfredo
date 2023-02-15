@@ -214,29 +214,10 @@ class BotRunner:
 
     @util.admin_command_check()
     def acmd_reminder(self, message):
-        tomorrow = date.today() + timedelta(days=1)
+        sent = self.reminder_internal(message)
 
-        row = self.db.get_by_date(tomorrow)
-        if row is None:
-            msg = f"Für den morgigen Tag ist kein Alfredo angekündigt ({util.format_date(tomorrow)})"
-            self.send_error(message, msg)
-            return
-
-        msg = ""
-        try:
-            text = "Attenzione!\n\nWer heute ein Kreuz setzt, muss morgen nicht hungern!"
-            self.safe_exec(
-                self.bot.send_message,
-                reraise=True,
-                chat_id=self.config["group"],
-                text=text,
-                reply_to_message_id=row.message_id
-            )
-        except Exception as ex:
-            self.send_error(message, f"Telegram API meldete einen Fehler: ({ex})")
-            return
-
-        self.safe_exec(self.bot.reply_to, message=message, text=util.success("Erinnerung gesendet"))
+        if sent:
+            self.safe_exec(self.bot.reply_to, message=message, text=util.success("Erinnerung gesendet"))
 
     @util.admin_command_check()
     def acmd_cancel(self, message):  # noqa: C901
@@ -320,12 +301,21 @@ class BotRunner:
 
     def signal_reminder(self, signum, frame):
         self.log.debug(f"Received signal {signum}, triggering reminder function")
+
+        sent = self.reminder_internal()
+
+        if sent:
+            self.log.info("Sent reminder for tomorrow")
+
+    def reminder_internal(self, message=None):
         tomorrow = date.today() + timedelta(days=1)
 
         row = self.db.get_by_date(tomorrow)
         if row is None:
-            # silently return
-            return
+            if message is not None:
+                msg = f"Für den morgigen Tag ist kein Alfredo angekündigt ({util.format_date(tomorrow)})"
+                self.send_error(message, msg)
+            return False
 
         try:
             text = "Attenzione!\n\nWer heute ein Kreuz setzt, muss morgen nicht hungern!"
@@ -337,10 +327,13 @@ class BotRunner:
                 reply_to_message_id=row.message_id
             )
         except Exception as ex:
-            self.log.error(f"Telegram API error when sending reminder for tomorrow: ({ex})")
-            return
+            if message is not None:
+                self.send_error(message, f"Telegram API meldete einen Fehler: ({ex})")
+            else:
+                self.log.error(f"Telegram API error when sending reminder for tomorrow: ({ex})")
+            return False
 
-        self.log.info(f"Sent reminder for {util.format_date(row.date)}")
+        return True
 
     def run(self):
         self.log.info("bot starts polling now")
