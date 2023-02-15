@@ -74,6 +74,7 @@ class BotRunner:
         self.db = Database(dbfile)
 
     def register_signal_handlers(self):
+        self.log.info("registering signal handlers")
         signal.signal(signal.SIGUSR1, self.signal_reminder)
 
     def log_command(self, message, admincmd=False):
@@ -247,7 +248,7 @@ class BotRunner:
             self.send_error(message, f"Telegram API meldete einen Fehler: ({ex})")
             return
 
-        self.safe_exec(self.bot.reply_to, message=message, text=util.success("Absage gesendet"))
+        self.safe_exec(self.bot.reply_to, message=message, text=util.success("Erinnerung gesendet"))
 
     def acmd_cancel(self, message):  # noqa: C901
         if not self.user_is_admin(message.from_user):
@@ -342,6 +343,7 @@ class BotRunner:
         self.safe_exec(self.bot.reply_to, message=message, text=util.success("Ankündigung gesendet"))
 
     def signal_reminder(self, signum, frame):
+        self.log.debug(f"Received signal {signum}, triggering reminder function")
         tomorrow = date.today() + timedelta(days=1)
 
         row = self.db.get_by_date(tomorrow)
@@ -359,7 +361,7 @@ class BotRunner:
                 reply_to_message_id=row.message_id
             )
         except Exception as ex:
-            self.log.error(f"Telegram API error when sending reminder for tomrrow: ({ex})")
+            self.log.error(f"Telegram API error when sending reminder for tomorrow: ({ex})")
             return
 
         self.log.info(f"Sent reminder for {util.format_date(row.date)}")
