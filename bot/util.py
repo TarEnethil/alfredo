@@ -20,7 +20,7 @@ def format_user(user):
 
 
 def get_version():
-    return "Alpha"
+    return "0.1 'Axies'"
 
 
 def emoji(emo):
