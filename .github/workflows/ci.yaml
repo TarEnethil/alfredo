@@ -1,0 +1,55 @@
+name: Python application
+
+on:
+  push:
+    branches: [ "master", "add-telegram-bot" ]
+  pull_request:
+    branches: [ "master", "add-telegram-bot" ]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-n-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        cd bot
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        cd bot
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --statistics
+    - name: Test with pytest
+      run: |
+        cd bot
+        ./run_tests.sh
+    - name: Run coverage
+      run: |
+        cd bot
+        ./coverage.sh xml
+    - name: Code Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: bot/coverage.xml
+        badge: true
+        fail_below_min: true
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: true
+        indicators: true
+        output: both
+        thresholds: '60 80'
