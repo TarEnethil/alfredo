@@ -1,11 +1,34 @@
+from functools import wraps
+
+
+def raise_exception_if_needed():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(self, *args, **kwargs):
+            skip = False
+            if self.delay > 0:
+                skip = True
+                self.delay -= 1
+
+            if skip is False and self.exceptions > 0:
+                self.exceptions -= 1
+                raise Exception("Fake API Error")
+
+            return f(self, *args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 class FakeBot:
     def __init__(self, token):
         self.token = token
         self.handlers = {}
         self.callback_handlers = []
         self.message_id = 0
+        self.delay = 0
         self.exceptions = 0
         self.polls = {}
+        self.pinned_message_id = 0
 
     def set_my_commands(self, commands):
         self.commands = commands
@@ -18,19 +41,13 @@ class FakeBot:
     def register_callback_query_handler(self, callback, func):
         self.callback_handlers.append((func, callback))
 
+    @raise_exception_if_needed()
     def send_message(self, chat_id, text, **kwargs):
-        if self.exceptions > 0:
-            self.exceptions -= 1
-            raise Exception("Fake API Error")
-
         self.last_message_chat_id = chat_id
         self.last_message_text = text
 
+    @raise_exception_if_needed()
     def send_poll(self, chat_id, question, **kwargs):
-        if self.exceptions > 0:
-            self.exceptions -= 1
-            raise Exception("Fake API Error")
-
         self.last_poll_chat_id = chat_id
         self.last_poll_text = question
 
@@ -38,32 +55,39 @@ class FakeBot:
         self.polls[self.message_id] = True
         return FakePoll(self.message_id)
 
+    @raise_exception_if_needed()
     def stop_poll(self, chat_id, message_id):
-        if self.exceptions > 0:
-            self.exceptions -= 1
-            raise Exception("Fake API Error")
-
         assert message_id in self.polls.keys()
         self.polls[message_id] = False
 
+    @raise_exception_if_needed()
     def reply_to(self, message, text, **kwargs):
-        if self.exceptions > 0:
-            self.exceptions -= 1
-            raise Exception("Fake API Error")
-
         self.last_reply_text = text
 
+    @raise_exception_if_needed()
     def send_document(self, document, **kwargs):
-        if self.exceptions > 0:
-            self.exceptions -= 1
-            raise Exception("Fake API Error")
-
         self.last_document = document
+
+    @raise_exception_if_needed()
+    def get_chat(self, chat_id):
+        if self.pinned_message_id > 0:
+            return FakeChat("group", pinned_message=FakeMessage(message_id=self.pinned_message_id))
+
+        return FakeChat("group")
+
+    @raise_exception_if_needed()
+    def pin_chat_message(self, message_id, **kwargs):
+        self.pinned_message_id = message_id
+
+    @raise_exception_if_needed()
+    def unpin_chat_message(self, message_id, **kwargs):
+        self.pinned_message_id = 0
 
     def infinity_polling(self):
         self.is_polling = True
 
-    def raise_on_next_action(self, n=1):
+    def raise_on_next_action(self, n=1, delay_by=0):
+        self.delay = delay_by
         self.exceptions = n
 
     def handle_command(self, cmd, msg):
@@ -92,8 +116,9 @@ class FakeMessage:
 
 
 class FakeChat:
-    def __init__(self, chat_type):
+    def __init__(self, chat_type, pinned_message=None):
         self.type = chat_type
+        self.pinned_message = pinned_message
 
 
 class FakeUser:
