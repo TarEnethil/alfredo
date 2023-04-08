@@ -28,6 +28,13 @@ if __name__ == "__main__":
         help="sqlite database to use"
     )
 
+    parser.add_argument(
+        "-t",
+        "--tmpdir",
+        default="/tmp/",
+        help="temporary dir for ephemeral files"
+    )
+
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -39,5 +46,5 @@ if __name__ == "__main__":
     # disable logging for urllib3, which would spam the log when using log level DEBUG
     logging.getLogger("urllib3").propagate = False
 
-    runner = BotRunner("config.json", TeleBot, args.database)
+    runner = BotRunner("config.json", TeleBot, args.database, args.tmpdir)
     runner.run()

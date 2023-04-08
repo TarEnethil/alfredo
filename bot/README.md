@@ -26,4 +26,3 @@ cp config.json.template config.json
 
 # TODO
 * Add comments
-* Add .ics

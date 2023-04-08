@@ -37,6 +37,10 @@ class Database:
         with Session(self.engine) as session:
             return session.scalars(select(AlfredoDate).where(AlfredoDate.date.is_(date))).first()
 
+    def get_by_message_id(self, message_id):
+        with Session(self.engine) as session:
+            return session.scalars(select(AlfredoDate).where(AlfredoDate.message_id.is_(message_id))).first()
+
     def delete_date(self, date):
         with Session(self.engine) as session:
             session.delete(date)
