@@ -521,6 +521,70 @@ class TestBotRunner:
             assert runner.bot.last_message_chat_id == GROUP
             assert "Attenzione" in runner.bot.last_message_text
             assert "Sent reminder" in caplog.text
+            assert "pinning message"
+            assert runner.bot.pinned_message_id == 1
+
+    def test_do_pinning(self, caplog):
+        runner = defaultRunner()
+
+        with caplog.at_level(logging.DEBUG):
+            assert runner.bot.pinned_message_id == 0
+
+            # case 1: no future dates
+            runner.do_pinning()
+            assert runner.bot.pinned_message_id == 0
+
+            # case 2: no chat info available
+            runner.bot.raise_on_next_action()
+            runner.do_pinning()
+            assert runner.bot.pinned_message_id == 0
+            assert "could not get chat info" in caplog.text
+            caplog.clear()
+
+            # case 3: pin next alfredo
+            tomorrow = date.today() + timedelta(days=1)
+            overmorrow = tomorrow + timedelta(days=1)
+            runner.db.create_alfredo_date(overmorrow, None, 20)
+            runner.do_pinning()
+            assert runner.bot.pinned_message_id == 20
+
+            # case 4: no error on already pinned message
+            runner.do_pinning()
+            assert runner.bot.pinned_message_id == 20
+
+            # case 5: override existing pinning
+            runner.db.create_alfredo_date(tomorrow, None, 15)
+            runner.do_pinning()
+            assert runner.bot.pinned_message_id == 15
+
+            # case 6: telegram error on pinning (no crash)
+            runner.bot.pinned_message_id = 0
+            # delay 1 so get_chat works
+            runner.bot.raise_on_next_action(delay_by=1)
+            runner.do_pinning()
+            # check get_chat() worked
+            assert "could not get chat info" not in caplog.text
+            caplog.clear()
+
+            # delete existing dates -> there are no future dates
+            for d in runner.db.get_future_dates():
+                runner.db.delete_date(d)
+            assert_num_dates(runner.db, 0)
+
+            # case 7: unpin message
+            runner.bot.pinned_message_id = 15
+            runner.do_pinning()
+            assert "unpinning" in caplog.text
+            assert runner.bot.pinned_message_id == 0
+
+            # case 8: telegram error on unpinning (no crash)
+            runner.bot.pinned_message_id = 25
+            # delay 1 so get_chat works
+            runner.bot.raise_on_next_action(delay_by=1)
+            runner.do_pinning()
+            # check get_chat() worked
+            assert "could not get chat info" not in caplog.text
+            runner.bot.pinned_message_id = 25
 
     def test_run(self):
         runner = defaultRunner()

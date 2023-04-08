@@ -84,7 +84,7 @@ class BotRunner:
 
     def register_signal_handlers(self):
         self.log.info("registering signal handlers")
-        signal.signal(signal.SIGUSR1, self.signal_reminder)
+        signal.signal(signal.SIGUSR1, self.signal_usr1)
 
     def log_command(self, message, admincmd=False):
         role = "admin" if self.user_is_admin(message.from_user) else "user"
@@ -309,13 +309,15 @@ class BotRunner:
 
         self.safe_exec(self.bot.reply_to, message=message, text=util.success("Ankündigung gesendet"))
 
-    def signal_reminder(self, signum, frame):
-        self.log.debug(f"Received signal {signum}, triggering reminder function")
+    def signal_usr1(self, signum, frame):
+        self.log.debug(f"Received signal {signum}, triggering reminder and cleanup functions")
 
         sent = self.reminder_internal()
-
         if sent:
             self.log.info("Sent reminder for tomorrow")
+
+        # logging inside
+        self.do_pinning()
 
     def handle_ics_callback(self, call):
         if call.message is not None:
@@ -367,6 +369,40 @@ class BotRunner:
             return False
 
         return True
+
+    def do_pinning(self):
+        dates = self.db.get_future_dates()
+
+        chat = self.safe_exec(
+            self.bot.get_chat,
+            reraise=False,
+            chat_id=self.config["group"]
+        )
+
+        if chat is None:
+            self.log.error("Pinning: could not get chat info")
+            return
+
+        if len(dates) > 0:
+            next_alf = dates[0]
+
+            if chat.pinned_message is None or chat.pinned_message.message_id != next_alf.message_id:
+                self.log.info(f"pinning message for alfredo {next_alf.date}")
+                self.safe_exec(
+                    self.bot.pin_chat_message,
+                    reraise=False,
+                    chat_id=self.config["group"],
+                    message_id=dates[0].message_id,
+                    disable_notification=True
+                )
+        elif chat.pinned_message is not None:
+            self.log.info(f"unpinning message {chat.pinned_message.message_id}")
+            self.safe_exec(
+                self.bot.unpin_chat_message,
+                reraise=False,
+                chad_id=self.config["group"],
+                message_id=chat.pinned_message.message_id
+            )
 
     def run(self):
         self.log.info("bot starts polling now")
