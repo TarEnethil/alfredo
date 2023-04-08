@@ -1,12 +1,21 @@
 from functools import wraps
+from telebot import types
+from ics import Calendar, Event
+from os import path
+import arrow
 import babel.dates
+import logging
+import datetime
+
+log = logging.getLogger("util")
 
 emojis = {
     "check": u'\U00002705',
     "cross": u'\U0000274C',
     "frowning": u'\U0001F641',
     "bullet": u'\U00002022',
-    "megaphone": u'\U0001F4E3'
+    "megaphone": u'\U0001F4E3',
+    "download": u'\U00002B07'
 }
 
 
@@ -40,6 +49,47 @@ def failure(msg):
 
 def li(string):
     return f"{emoji('bullet')} {string}\n"
+
+
+def ics_keyboard():
+    return types.InlineKeyboardMarkup(
+        keyboard=[
+            [
+                types.InlineKeyboardButton(
+                    text=f"{emoji('download')} iCal anfordern",
+                    callback_data='ics'
+                )
+            ]
+        ]
+    )
+
+
+def generate_ics_file(workdir, date):
+    filename = f"{babel.dates.format_date(date, format='yyyy-MM-dd')}_alfredo.ics"
+    filepath = path.join(workdir, filename)
+
+    if not path.exists(filepath):
+        log.debug(f"creating new ics file {filepath}")
+        begin = arrow.get(date, "Europe/Berlin")
+        begin = begin.replace(hour=18)
+
+        cal = Calendar()
+        ev = Event(
+            name="Alfredo",
+            begin=begin.to("UTC"),
+            duration={"hours": 4},
+            location="Z3034",
+            created=datetime.datetime.now()
+        )
+
+        cal.events.add(ev)
+
+        with open(filepath, 'w') as f:
+            f.writelines(cal.serialize_iter())
+    else:
+        log.debug(f"serving ics file {filepath} from cache")
+
+    return filepath
 
 
 def admin_command_check():

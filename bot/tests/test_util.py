@@ -1,5 +1,8 @@
 from datetime import date
+from os import path
+import logging
 import util
+import telebot
 
 from fake import FakeUser
 
@@ -34,6 +37,7 @@ class TestUtil:
         assert util.emoji("check") != ""
         assert util.emoji("frowning") != ""
         assert util.emoji("megaphone") != ""
+        assert util.emoji("download") != ""
 
         assert util.emoji("does_not_exist") == ""
 
@@ -53,3 +57,31 @@ class TestUtil:
         assert s.startswith(util.emoji("bullet"))
         assert "test" in s
         assert s.endswith("\n")
+
+    def test_ics_keyboard(self):
+        kb = util.ics_keyboard()
+
+        assert isinstance(kb, telebot.types.InlineKeyboardMarkup)
+        assert "iCal anfordern" in kb.keyboard[0][0].text
+
+    def test_generate_ics_file(self, tmp_path, caplog):
+        with caplog.at_level(logging.DEBUG):
+            d = date.fromisoformat("2023-01-01")
+
+            name = path.join(tmp_path, "2023-01-01_alfredo.ics")
+            assert not path.exists(name)
+
+            ret = util.generate_ics_file(tmp_path, d)
+            assert path.exists(ret)
+            assert ret == name
+
+            assert "creating new ics file" in caplog.text
+            assert "from cache" not in caplog.text
+            caplog.clear()
+
+            ret = util.generate_ics_file(tmp_path, d)
+            assert path.exists(ret)
+            assert ret == name
+
+            assert "creating new ics file" not in caplog.text
+            assert "from cache" in caplog.text

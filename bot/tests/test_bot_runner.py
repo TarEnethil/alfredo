@@ -1,10 +1,11 @@
 import logging
 from datetime import date, timedelta
 import json
-from fake import FakeBot, FakeUser, FakeMessage
+from fake import FakeBot, FakeUser, FakeMessage, FakeCallbackObject
 from bot_runner import BotRunner
 import util
 import signal
+from ics import Calendar
 
 import pytest
 
@@ -16,8 +17,8 @@ TESTCFG = "tests/config-test.json"
 DEFAULT_MESSAGE = FakeMessage(USER)
 
 
-def defaultRunner():
-    return BotRunner(TESTCFG, FakeBot, ":memory:")
+def defaultRunner(tmp_path=None):
+    return BotRunner(TESTCFG, FakeBot, ":memory:", tmp_path)
 
 
 def assert_num_dates(db, num):
@@ -32,19 +33,21 @@ def assert_num_dates(db, num):
 
 
 class TestBotRunner:
-    def test_basic(self):
-        runner = defaultRunner()
+    def test_basic(self, tmp_path):
+        runner = defaultRunner(tmp_path)
 
         # check that a handler for every command was registered
         assert len(runner.bot.handlers.keys()) == len(runner.default_commands) + len(runner.admin_commands)
+        assert len(runner.bot.callback_handlers) == len(runner.callbacks)
         assert runner.bot.token == "abcdefghijklmnopqrstuvwxyz"
+        assert runner.tmpdir == tmp_path
 
     def test_config_errors(self, tmp_path):
         tmp_cfg = tmp_path / "tmp.json"
 
         # case 1: config file does not exist
         with pytest.raises(Exception) as ex:
-            BotRunner("does-not-exist.json", None, None)
+            BotRunner("does-not-exist.json", None, None, None)
 
         assert "does not exist" in ex.value.args[0]
 
@@ -59,7 +62,7 @@ class TestBotRunner:
                 json.dump(cfg, out)
 
             with pytest.raises(Exception) as ex:
-                BotRunner(tmp_cfg, None, None)
+                BotRunner(tmp_cfg, None, None, None)
 
             assert f"config key {k} not found" in ex.value.args[0]
 
@@ -73,7 +76,7 @@ class TestBotRunner:
             json.dump(cfg, out)
 
         with pytest.raises(Exception) as ex:
-            BotRunner(tmp_cfg, None, None)
+            BotRunner(tmp_cfg, None, None, None)
 
         assert "at least one admin" in ex.value.args[0]
 
@@ -146,7 +149,7 @@ class TestBotRunner:
         with pytest.raises(Exception):
             runner.safe_exec(raise_, reraise=True, arg="test")
 
-    def test_cms_with_execption(self):
+    def test_cmds_with_execption(self):
         runner = defaultRunner()
 
         tomorrow = date.today() + timedelta(days=1)
@@ -461,6 +464,37 @@ class TestBotRunner:
         assert runner.bot.last_message_chat_id == GROUP
         assert runner.bot.last_message_text.endswith("Test Test Test")
         assert COMMAND not in runner.bot.last_message_text
+
+    def test_callback_ics(self, tmp_path):
+        runner = defaultRunner(tmp_path)
+
+        # case 1: invalid callback message (no crash)
+        cbo = FakeCallbackObject(USER, "ics", None)
+        runner.bot.handle_callback(cbo)
+
+        # case 2: no alfredo for message id (no crash)
+        cbo = FakeCallbackObject(USER, "ics", FakeMessage(message_id=1337))
+        runner.bot.handle_callback(cbo)
+
+        # case 3: good case
+        runner.db.create_alfredo_date(date.today(), None, 1)
+        cbo = FakeCallbackObject(USER, "ics",  FakeMessage(message_id=1))
+        runner.bot.handle_callback(cbo)
+
+        ics = runner.bot.last_document.read()
+        cal = Calendar(ics.decode("utf-8"))
+        assert len(cal.events) == 1
+
+        ev = list(cal.events)[0]
+
+        # skip date validation for now
+        assert ev.name == "Alfredo"
+        assert ev.location == "Z3034"
+        assert ev.duration == timedelta(hours=4)
+
+        # case 4: exception (no crash / exception)
+        runner.bot.raise_on_next_action()
+        runner.bot.handle_callback(cbo)
 
     def test_signal_handler(self, caplog):
         runner = defaultRunner()
