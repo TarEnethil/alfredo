@@ -2,6 +2,7 @@ from functools import wraps
 from telebot import types
 from ics import Calendar, Event
 from os import path
+from random import choice
 import arrow
 import babel.dates
 import logging
@@ -17,6 +18,17 @@ emojis = {
     "megaphone": u'\U0001F4E3',
     "download": u'\U00002B07'
 }
+
+reminders = [
+    "Wer heute sein Kreuz setzt, muss morgen nicht hungern!",
+    "Heute votieren -> morgen dinieren!",
+    "Heute schön einschreiben -> morgen dick einverleiben!",
+    "Heiße Teigscheiben in deiner Umgebung suchen DICH! MELD. DICH. AN.",
+    "Hunger? Muss nicht sein, meld' dich jetzt an!",
+    "Letzte Chance für nette Fettigkeiten oder fette Nettigkeiten!",
+    "Morgen gibt's mal wieder Pizza...",
+    "Hast du auch von Pizza geträumt? Bei Alfredo werden morgen Träume Wirklichkeit!"
+]
 
 
 def format_date(date):
@@ -90,6 +102,10 @@ def generate_ics_file(workdir, date):
         log.debug(f"serving ics file {filepath} from cache")
 
     return filepath
+
+
+def get_reminder():
+    return choice(reminders)
 
 
 def admin_command_check():
