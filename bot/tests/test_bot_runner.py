@@ -338,6 +338,8 @@ class TestBotRunner:
         assert util.format_date(date.fromisoformat("2199-01-01")) in runner.bot.last_poll_text
         assert date_.date == date.fromisoformat("2199-01-01")
         assert date_.message_id == 1
+        # automatically pinned pinning
+        assert runner.bot.pinned_message_id == date_.message_id
 
         # error 6: duplicate
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} 2199-01-01"))
@@ -432,11 +434,14 @@ class TestBotRunner:
 
         # goodcase
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
+        assert runner.bot.pinned_message_id == runner.db.get_future_dates()[0].message_id
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} 2199-01-01"))
         assert runner.bot.last_reply_text.count(util.emoji('cross')) == 0
         assert runner.bot.last_reply_text.count(util.emoji('check')) == 3
         assert runner.bot.polls[3] is False
         assert_num_dates(runner.db, 0)
+        # automatically unpinned
+        assert runner.bot.pinned_message_id == 0
 
     def test_acmd_announce(self):
         COMMAND = "announce"

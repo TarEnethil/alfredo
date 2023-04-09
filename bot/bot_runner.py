@@ -220,6 +220,8 @@ class BotRunner:
 
         self.db.create_alfredo_date(date_, description, poll.message_id)
 
+        self.do_pinning()
+
         self.safe_exec(self.bot.reply_to, message=message, text=util.success("Umfrage wurde erstellt"))
 
     @util.admin_command_check()
@@ -282,6 +284,8 @@ class BotRunner:
 
         self.db.delete_date(row)
         msg += util.li(util.success("Aus Datenbank entfernt"))
+
+        self.do_pinning()
 
         self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
