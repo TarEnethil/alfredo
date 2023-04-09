@@ -357,7 +357,7 @@ class BotRunner:
             return False
 
         try:
-            text = "Attenzione!\n\nWer heute ein Kreuz setzt, muss morgen nicht hungern!"
+            text = f"Attenzione!\n\n{util.get_reminder()}"
             self.safe_exec(
                 self.bot.send_message,
                 reraise=True,

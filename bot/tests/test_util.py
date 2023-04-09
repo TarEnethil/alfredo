@@ -85,3 +85,11 @@ class TestUtil:
 
             assert "creating new ics file" not in caplog.text
             assert "from cache" in caplog.text
+
+    def test_get_reminder(self):
+        reminders = set()
+
+        for i in range(1000):
+            reminders.add(util.get_reminder())
+
+        assert len(reminders) == len(util.reminders)
