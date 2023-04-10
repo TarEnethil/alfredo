@@ -10,6 +10,7 @@ bot/venv
 *__pycache__*
 *.pyc
 bot/config.json
+bot/data/config.json
 *.sqlite
 bot/htmlcov
 .coverage

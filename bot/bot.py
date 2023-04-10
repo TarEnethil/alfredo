@@ -22,17 +22,24 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-c",
+        "--config",
+        default="config.json",
+        help="Path to config file",
+    )
+
+    parser.add_argument(
         "-d",
         "--database",
         default="alfredo.sqlite",
-        help="sqlite database to use"
+        help="Path to sqlite database"
     )
 
     parser.add_argument(
         "-t",
         "--tmpdir",
         default="/tmp/",
-        help="temporary dir for ephemeral files"
+        help="Temporary dir for ephemeral files"
     )
 
     args = parser.parse_args()
@@ -46,5 +53,5 @@ if __name__ == "__main__":
     # disable logging for urllib3, which would spam the log when using log level DEBUG
     logging.getLogger("urllib3").propagate = False
 
-    runner = BotRunner("config.json", TeleBot, args.database, args.tmpdir)
+    runner = BotRunner(args.config, TeleBot, args.database, args.tmpdir)
     runner.run()
