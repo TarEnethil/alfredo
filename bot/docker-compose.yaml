@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  alfredo:
+    image: alfredo:latest
+    container_name: alfredo
+    restart: unless-stopped
+    volumes:
+      - ./data:/home/alfredo/ext

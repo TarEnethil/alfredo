@@ -13,8 +13,16 @@ cp config.json.template config.json
 * Invite bot to your group and get the "chat_id" from `https://api.telegram.org/bot<TOKEN>/getUpdates` -> config value "group" (negative ID as string)
 * Write one message to your bot and get your "chat_id" from `https://api.telegram.org/bot<TOKEN>/getUpdates` -> config value "admins" (list of integers)
 
-# Run Bot
+# Run Bot (standalone)
 * `./bot.py`
+
+# Run Bot (Docker)
+```bash
+# move config to docker-mounted volume
+mv config.json data/
+sudo docker build . -t alfredo:latest
+sudo docker-compose up -d
+````
 
 # Autoreminder
 * send SIGUSR1 to automatically send a reminder for tomorrow's date (if it exists)
