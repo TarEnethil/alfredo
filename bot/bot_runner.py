@@ -404,7 +404,7 @@ class BotRunner:
             self.safe_exec(
                 self.bot.unpin_chat_message,
                 reraise=False,
-                chad_id=self.config["group"],
+                chat_id=self.config["group"],
                 message_id=chat.pinned_message.message_id
             )
 
