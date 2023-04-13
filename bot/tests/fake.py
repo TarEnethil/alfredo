@@ -80,7 +80,7 @@ class FakeBot:
         self.pinned_message_id = message_id
 
     @raise_exception_if_needed()
-    def unpin_chat_message(self, message_id, **kwargs):
+    def unpin_chat_message(self, message_id, chat_id):
         self.pinned_message_id = 0
 
     def infinity_polling(self):
