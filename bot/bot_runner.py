@@ -387,8 +387,16 @@ class BotRunner:
             self.log.error("Pinning: could not get chat info")
             return
 
+        unpin = False
+
         if len(dates) > 0:
             next_alf = dates[0]
+
+            # unpin (last) old message if necessary
+            # as get_chat only returns the last pinned message, this assumes
+            # that there will always only be one pinned message at a time
+            if chat.pinned_message is not None and chat.pinned_message.message_id != next_alf.message_id:
+                unpin = True
 
             if chat.pinned_message is None or chat.pinned_message.message_id != next_alf.message_id:
                 self.log.info(f"pinning message for alfredo {next_alf.date}")
@@ -399,7 +407,11 @@ class BotRunner:
                     message_id=dates[0].message_id,
                     disable_notification=True
                 )
+        # no new dates, unpin old message
         elif chat.pinned_message is not None:
+            unpin = True
+
+        if unpin:
             self.log.info(f"unpinning message {chat.pinned_message.message_id}")
             self.safe_exec(
                 self.bot.unpin_chat_message,
