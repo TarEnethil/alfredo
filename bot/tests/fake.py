@@ -28,7 +28,7 @@ class FakeBot:
         self.delay = 0
         self.exceptions = 0
         self.polls = {}
-        self.pinned_message_id = 0
+        self.pinned_message_ids = []
 
     def set_my_commands(self, commands):
         self.commands = commands
@@ -70,18 +70,19 @@ class FakeBot:
 
     @raise_exception_if_needed()
     def get_chat(self, chat_id):
-        if self.pinned_message_id > 0:
-            return FakeChat("group", pinned_message=FakeMessage(message_id=self.pinned_message_id))
+        if len(self.pinned_message_ids) > 0:
+            return FakeChat("group", pinned_message=FakeMessage(message_id=self.pinned_message_ids[-1]))
 
         return FakeChat("group")
 
     @raise_exception_if_needed()
     def pin_chat_message(self, message_id, **kwargs):
-        self.pinned_message_id = message_id
+        self.pinned_message_ids.append(message_id)
 
     @raise_exception_if_needed()
     def unpin_chat_message(self, message_id, chat_id):
-        self.pinned_message_id = 0
+        assert message_id in self.pinned_message_ids
+        self.pinned_message_ids.remove(message_id)
 
     def infinity_polling(self):
         self.is_polling = True
