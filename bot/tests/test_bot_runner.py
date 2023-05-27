@@ -1,7 +1,7 @@
 import logging
 from datetime import date, timedelta
 import json
-from fake import FakeBot, FakeUser, FakeMessage, FakeCallbackObject
+from fake import FakeBot, FakeUser, FakeMessage
 from bot_runner import BotRunner
 import util
 import signal
@@ -43,7 +43,6 @@ class TestBotRunner:
 
         # check that a handler for every command was registered
         assert len(runner.bot.handlers.keys()) == len(runner.default_commands) + len(runner.admin_commands)
-        assert len(runner.bot.callback_handlers) == len(runner.callbacks)
         assert runner.bot.token == "abcdefghijklmnopqrstuvwxyz"
         assert runner.tmpdir == tmp_path
 
@@ -457,37 +456,6 @@ class TestBotRunner:
         assert runner.bot.last_message_chat_id == GROUP
         assert runner.bot.last_message_text.endswith("Test Test Test")
         assert COMMAND not in runner.bot.last_message_text
-
-    def test_callback_ics(self, tmp_path):
-        runner = defaultRunner(tmp_path)
-
-        # case 1: invalid callback message (no crash)
-        cbo = FakeCallbackObject(USER, "ics", None)
-        runner.bot.handle_callback(cbo)
-
-        # case 2: no alfredo for message id (no crash)
-        cbo = FakeCallbackObject(USER, "ics", FakeMessage(message_id=1337))
-        runner.bot.handle_callback(cbo)
-
-        # case 3: good case
-        runner.db.create_alfredo_date(TODAY, None, 1)
-        cbo = FakeCallbackObject(USER, "ics",  FakeMessage(message_id=1))
-        runner.bot.handle_callback(cbo)
-
-        ics = runner.bot.last_document.read()
-        cal = Calendar(ics.decode("utf-8"))
-        assert len(cal.events) == 1
-
-        ev = list(cal.events)[0]
-
-        # skip date validation for now
-        assert ev.name == "Alfredo"
-        assert ev.location == "Z3034"
-        assert ev.duration == timedelta(hours=4)
-
-        # case 4: exception (no crash / exception)
-        runner.bot.raise_on_next_action()
-        runner.bot.handle_callback(cbo)
 
     def test_signal_handler(self, caplog):
         runner = defaultRunner()

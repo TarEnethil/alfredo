@@ -2,7 +2,6 @@ from datetime import date
 from os import path
 import logging
 import util
-import telebot
 
 from fake import FakeUser
 
@@ -57,12 +56,6 @@ class TestUtil:
         assert s.startswith(util.emoji("bullet"))
         assert "test" in s
         assert s.endswith("\n")
-
-    def test_ics_keyboard(self):
-        kb = util.ics_keyboard()
-
-        assert isinstance(kb, telebot.types.InlineKeyboardMarkup)
-        assert "iCal anfordern" in kb.keyboard[0][0].text
 
     def test_generate_ics_file(self, tmp_path, caplog):
         with caplog.at_level(logging.DEBUG):
