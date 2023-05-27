@@ -16,6 +16,11 @@ GROUP = "-1337"
 TESTCFG = "tests/config-test.json"
 DEFAULT_MESSAGE = FakeMessage(USER)
 
+TODAY = date.today()
+TOMORROW = TODAY + timedelta(days=1)
+OVERMORROW = TOMORROW + timedelta(days=1)
+YESTERDAY = TODAY - timedelta(days=1)
+
 
 def defaultRunner(tmp_path=None):
     return BotRunner(TESTCFG, FakeBot, ":memory:", tmp_path)
@@ -152,18 +157,16 @@ class TestBotRunner:
     def test_cmds_with_execption(self):
         runner = defaultRunner()
 
-        tomorrow = date.today() + timedelta(days=1)
-
         # collection of goodcases
         cmds = {
             "start": FakeMessage(USER, "channel"),
             "help": FakeMessage(USER, "channel"),
             "karte": DEFAULT_MESSAGE,
             "termine": DEFAULT_MESSAGE,
-            "newalfredo": FakeMessage(ADMIN1, text=f"newalfredo {tomorrow.isoformat()}"),
+            "newalfredo": FakeMessage(ADMIN1, text=f"newalfredo {TOMORROW.isoformat()}"),
             "reminder": FakeMessage(ADMIN1, text="reminder"),
             "announce": FakeMessage(ADMIN1, text="announce Test Test Test"),
-            "cancel": FakeMessage(ADMIN1, text=f"cancel {tomorrow.isoformat()}")
+            "cancel": FakeMessage(ADMIN1, text=f"cancel {TOMORROW.isoformat()}")
         }
 
         assert len(cmds) == len(runner.default_commands) + len(runner.admin_commands)
@@ -260,26 +263,20 @@ class TestBotRunner:
         msg = runner.bot.last_reply_text
         assert "keine" in msg
 
-        one_day = timedelta(days=1)
-
-        today = date.today()
-        yesterday = today - one_day
         # add alfredo, but in the past -> no change in output
-        runner.db.create_alfredo_date(yesterday, None, 1)
+        runner.db.create_alfredo_date(YESTERDAY, None, 1)
 
         runner.bot.handle_command(COMMAND, DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
         assert "keine" in msg
 
-        runner.db.create_alfredo_date(today, None, 2)
+        runner.db.create_alfredo_date(TODAY, None, 2)
         runner.bot.handle_command(COMMAND, DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
         assert "einzige" in msg
 
-        tomorrow = today + one_day
-        overmorrow = tomorrow + one_day
-        runner.db.create_alfredo_date(tomorrow, None, 3)
-        runner.db.create_alfredo_date(overmorrow, None, 4)
+        runner.db.create_alfredo_date(TOMORROW, None, 3)
+        runner.db.create_alfredo_date(OVERMORROW, None, 4)
 
         runner.bot.handle_command(COMMAND, DEFAULT_MESSAGE)
         msg = runner.bot.last_reply_text
@@ -312,13 +309,9 @@ class TestBotRunner:
         assert_num_dates(runner.db, 0)
 
         # error 4: before today
-        one_day = timedelta(days=1)
-        today = date.today()
-        yesterday = today - one_day
-
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} 2022-01-01"))
         assert "frühstens heute" in runner.bot.last_reply_text
-        runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} {yesterday.isoformat()}"))
+        runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} {YESTERDAY.isoformat()}"))
         assert "frühstens heute" in runner.bot.last_reply_text
         assert_num_dates(runner.db, 0)
 
@@ -358,8 +351,7 @@ class TestBotRunner:
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=COMMAND))
         assert "morgigen Tag ist kein Alfredo" in runner.bot.last_reply_text
 
-        tomorrow = date.today() + timedelta(days=1)
-        runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {tomorrow.isoformat()}"))
+        runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {TOMORROW.isoformat()}"))
         assert_num_dates(runner.db, 1)
 
         # error 3: telegram exception
@@ -403,13 +395,9 @@ class TestBotRunner:
         assert_num_dates(runner.db, 1)
 
         # error 4: before today
-        one_day = timedelta(days=1)
-        today = date.today()
-        yesterday = today - one_day
-
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} 2022-01-01"))
         assert "in der Zukunft" in runner.bot.last_reply_text
-        runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} {yesterday.isoformat()}"))
+        runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} {YESTERDAY.isoformat()}"))
         assert "in der Zukunft" in runner.bot.last_reply_text
         assert_num_dates(runner.db, 1)
 
@@ -482,7 +470,7 @@ class TestBotRunner:
         runner.bot.handle_callback(cbo)
 
         # case 3: good case
-        runner.db.create_alfredo_date(date.today(), None, 1)
+        runner.db.create_alfredo_date(TODAY, None, 1)
         cbo = FakeCallbackObject(USER, "ics",  FakeMessage(message_id=1))
         runner.bot.handle_callback(cbo)
 
@@ -509,8 +497,7 @@ class TestBotRunner:
             # error 1: no date tomorrow (silent, but no error either)
             signal.raise_signal(signal.SIGUSR1)
 
-            tomorrow = date.today() + timedelta(days=1)
-            runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {tomorrow.isoformat()}"))
+            runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {TOMORROW.isoformat()}"))
             assert_num_dates(runner.db, 1)
 
             # error 2: telegram API
@@ -547,9 +534,7 @@ class TestBotRunner:
             caplog.clear()
 
             # case 3: pin next alfredo
-            tomorrow = date.today() + timedelta(days=1)
-            overmorrow = tomorrow + timedelta(days=1)
-            runner.db.create_alfredo_date(overmorrow, None, 20)
+            runner.db.create_alfredo_date(OVERMORROW, None, 20)
             runner.do_pinning()
             assert runner.bot.pinned_message_ids[0] == 20
 
@@ -558,7 +543,7 @@ class TestBotRunner:
             assert runner.bot.pinned_message_ids[0] == 20
 
             # case 5: override existing pinning
-            runner.db.create_alfredo_date(tomorrow, None, 15)
+            runner.db.create_alfredo_date(TOMORROW, None, 15)
             runner.do_pinning()
             assert runner.bot.pinned_message_ids[0] == 15
 
