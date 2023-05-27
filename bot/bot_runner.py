@@ -205,7 +205,7 @@ class BotRunner:
                 reraise=True,
                 chat_id=self.config["group"],
                 question=description,
-                options=["Teilnahme", "Teilnahme (+1 Gast)", "Absage"],
+                options=["Teilnahme", "Teilnahme (+1 Gast)"],
                 is_anonymous=False
             )
             msg += util.li(util.success("Umfrage erstellt"))
