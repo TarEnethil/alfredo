@@ -197,6 +197,8 @@ class BotRunner:
 
         description = f"Alfredo am {util.format_date(date_)} (18:00 Uhr)"
 
+        msg = ""
+
         try:
             poll = self.safe_exec(
                 self.bot.send_poll,
@@ -206,15 +208,34 @@ class BotRunner:
                 options=["Teilnahme", "Teilnahme (+1 Gast)", "Absage"],
                 is_anonymous=False
             )
+            msg += util.li(util.success("Umfrage erstellt"))
         except Exception as ex:
+            # early exit
             self.send_error(message, f"Telegram API meldete einen Fehler: {ex}")
             return
 
         self.db.create_alfredo_date(date_, description, poll.message_id)
 
+        file = util.generate_ics_file(self.tmpdir, date_)
+        text = f'.ics für {util.format_date(date_)}'
+
+        try:
+            self.safe_exec(
+                self.bot.send_document,
+                reraise=True,
+                chat_id=self.config["group"],
+                reply_to_message_id=poll.message_id,
+                caption=text,
+                document=open(file, 'rb'),
+                disable_notification=True,
+            )
+            msg += util.li(util.success(".ics File gesendet"))
+        except Exception as ex:
+            msg += util.li(util.failure(f".ics File gesendet ({ex})"))
+
         self.do_pinning()
 
-        self.safe_exec(self.bot.reply_to, message=message, text=util.success("Umfrage wurde erstellt"))
+        self.safe_exec(self.bot.reply_to, message=message, text=msg)
 
     @util.admin_command_check()
     def acmd_reminder(self, message):

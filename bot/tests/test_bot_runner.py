@@ -282,9 +282,9 @@ class TestBotRunner:
         assert "nächsten 3 Termine" in msg
         assert msg.count(util.emoji('bullet')) == 3
 
-    def test_acmd_new_alfredo(self):
+    def test_acmd_new_alfredo(self, tmp_path):
         COMMAND = "newalfredo"
-        runner = defaultRunner()
+        runner = defaultRunner(tmp_path)
 
         # error 1: no admin
         runner.bot.handle_command(COMMAND, FakeMessage(USER, text="newalfredo 2199-01-01"))
@@ -322,8 +322,9 @@ class TestBotRunner:
 
         # goodcase
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} 2199-01-01"))
-        assert "Umfrage wurde erstellt" in runner.bot.last_reply_text
-        assert util.emoji("check") in runner.bot.last_reply_text
+        assert "Umfrage erstellt" in runner.bot.last_reply_text
+        assert ".ics File gesendet" in runner.bot.last_reply_text
+        assert runner.bot.last_reply_text.count(util.emoji("check")) == 2
         assert_num_dates(runner.db, 1)
         date_ = runner.db.get_future_dates()[0]
         assert runner.bot.last_poll_chat_id == GROUP
@@ -333,10 +334,32 @@ class TestBotRunner:
         # automatically pinned pinning
         assert date_.message_id in runner.bot.pinned_message_ids
 
+        # check ics file contents
+        ics = runner.bot.last_document.read()
+        cal = Calendar(ics.decode("utf-8"))
+        assert len(cal.events) == 1
+
+        ev = list(cal.events)[0]
+
+        # skip date validation for now
+        assert ev.name == "Alfredo"
+        assert ev.location == "Z3034"
+        assert ev.duration == timedelta(hours=4)
+
         # error 6: duplicate
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} 2199-01-01"))
         assert "bereits ein Alfredo" in runner.bot.last_reply_text
         assert_num_dates(runner.db, 1)
+
+        # error 7: fail on sending file
+        runner.bot.raise_on_next_action(delay_by=1)
+        runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=f"{COMMAND} 2199-01-02"))
+        assert "Umfrage erstellt" in runner.bot.last_reply_text
+        assert ".ics File gesendet" in runner.bot.last_reply_text
+        assert runner.bot.last_reply_text.count(util.emoji("check")) == 1
+        assert runner.bot.last_reply_text.count(util.emoji("cross")) == 1
+        # alfredo date is created nonetheless
+        assert_num_dates(runner.db, 2)
 
     def test_acmd_reminder(self):
         COMMAND = "reminder"
@@ -350,7 +373,7 @@ class TestBotRunner:
         runner.bot.handle_command(COMMAND, FakeMessage(ADMIN1, text=COMMAND))
         assert "morgigen Tag ist kein Alfredo" in runner.bot.last_reply_text
 
-        runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text=f"newalfredo {TOMORROW.isoformat()}"))
+        runner.db.create_alfredo_date(TOMORROW, None, 1)
         assert_num_dates(runner.db, 1)
 
         # error 3: telegram exception
@@ -365,9 +388,9 @@ class TestBotRunner:
         assert runner.bot.last_message_chat_id == GROUP
         assert "Attenzione" in runner.bot.last_message_text
 
-    def test_acmd_cancel(self):
+    def test_acmd_cancel(self, tmp_path):
         COMMAND = "cancel"
-        runner = defaultRunner()
+        runner = defaultRunner(tmp_path)
 
         runner.bot.handle_command("newalfredo", FakeMessage(ADMIN1, text="newalfredo 2199-01-01"))
         assert_num_dates(runner.db, 1)
@@ -457,8 +480,8 @@ class TestBotRunner:
         assert runner.bot.last_message_text.endswith("Test Test Test")
         assert COMMAND not in runner.bot.last_message_text
 
-    def test_signal_handler(self, caplog):
-        runner = defaultRunner()
+    def test_signal_handler(self, caplog, tmp_path):
+        runner = defaultRunner(tmp_path)
 
         with caplog.at_level(logging.DEBUG):
             runner.log_command(FakeMessage(USER, text="/command"))
@@ -477,11 +500,10 @@ class TestBotRunner:
 
             # goodcase
             signal.raise_signal(signal.SIGUSR1)
-            assert runner.bot.last_reply_text.count(util.emoji('check')) == 1
+            assert runner.bot.last_reply_text.count(util.emoji('check')) == 2
             assert runner.bot.last_message_chat_id == GROUP
             assert "Attenzione" in runner.bot.last_message_text
             assert "Sent reminder" in caplog.text
-            assert "pinning message"
             assert runner.bot.pinned_message_ids[0] == 1
 
     def test_do_pinning(self, caplog):
