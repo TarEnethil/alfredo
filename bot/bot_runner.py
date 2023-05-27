@@ -26,11 +26,6 @@ class BotRunner:
         telebot.types.BotCommand("announce", "<announcement>: Ankündigung in der Gruppe posten")
     ]
 
-    # not that useful (yet), can be used by unit tests
-    callbacks = [
-        "Generate ics file"
-    ]
-
     def __init__(self, cfgfile, bot_invoker, dbfile, tmpdir):
         self.log = logging.getLogger("BotRunner")
 
@@ -75,8 +70,6 @@ class BotRunner:
         self.bot.register_message_handler(self.acmd_reminder, commands=['reminder'])
         self.bot.register_message_handler(self.acmd_cancel, commands=['cancel'])
         self.bot.register_message_handler(self.acmd_announce, commands=['announce'])
-
-        self.bot.register_callback_query_handler(self.handle_ics_callback, func=lambda c: c.data == 'ics')
 
     def init_database(self, dbfile):
         self.log.info("initializing database")
@@ -211,8 +204,7 @@ class BotRunner:
                 chat_id=self.config["group"],
                 question=description,
                 options=["Teilnahme", "Teilnahme (+1 Gast)", "Absage"],
-                is_anonymous=False,
-                reply_markup=util.ics_keyboard()
+                is_anonymous=False
             )
         except Exception as ex:
             self.send_error(message, f"Telegram API meldete einen Fehler: {ex}")
@@ -322,29 +314,6 @@ class BotRunner:
 
         # logging inside
         self.do_pinning()
-
-    def handle_ics_callback(self, call):
-        if call.message is not None:
-            alf = self.db.get_by_message_id(call.message.message_id)
-
-            if alf is None:
-                self.log.error(f"received ics callback for invalid message id {call.message.message_id}")
-                return
-
-            self.log.debug(f"received ics callback from {util.format_user(call.from_user)} for alfredo on {alf.date}")
-
-            file = util.generate_ics_file(self.tmpdir, alf.date)
-            text = f'.ics für {util.format_date(alf.date)}'
-
-            self.safe_exec(
-                self.bot.send_document,
-                reraise=False,
-                chat_id=self.config["group"],
-                reply_to_message_id=call.message.message_id,
-                caption=text,
-                document=open(file, 'rb'),
-                disable_notification=True,
-            )
 
     def reminder_internal(self, message=None):
         tomorrow = date.today() + timedelta(days=1)

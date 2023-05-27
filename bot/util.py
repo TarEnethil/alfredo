@@ -1,5 +1,4 @@
 from functools import wraps
-from telebot import types
 from ics import Calendar, Event
 from os import path
 from random import choice
@@ -61,19 +60,6 @@ def failure(msg):
 
 def li(string):
     return f"{emoji('bullet')} {string}\n"
-
-
-def ics_keyboard():
-    return types.InlineKeyboardMarkup(
-        keyboard=[
-            [
-                types.InlineKeyboardButton(
-                    text=f"{emoji('download')} iCal anfordern",
-                    callback_data='ics'
-                )
-            ]
-        ]
-    )
 
 
 def generate_ics_file(workdir, date):

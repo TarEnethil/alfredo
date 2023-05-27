@@ -23,7 +23,6 @@ class FakeBot:
     def __init__(self, token):
         self.token = token
         self.handlers = {}
-        self.callback_handlers = []
         self.message_id = 0
         self.delay = 0
         self.exceptions = 0
@@ -37,9 +36,6 @@ class FakeBot:
         for cmd in commands:
             assert cmd not in self.handlers.keys()
             self.handlers[cmd] = func
-
-    def register_callback_query_handler(self, callback, func):
-        self.callback_handlers.append((func, callback))
 
     @raise_exception_if_needed()
     def send_message(self, chat_id, text, **kwargs):
@@ -96,17 +92,6 @@ class FakeBot:
 
         self.handlers[cmd](msg)
 
-    def handle_callback(self, cbo):
-        found = False
-        for (func, cb) in self.callback_handlers:
-            if func(cbo):
-                # only one function matches
-                assert found is False
-                found = True
-                cb(cbo)
-
-        assert found
-
 
 class FakeMessage:
     def __init__(self, user=None, chat_type=None, text=None, message_id=None):
@@ -132,10 +117,3 @@ class FakeUser:
 class FakePoll:
     def __init__(self, message_id):
         self.message_id = message_id
-
-
-class FakeCallbackObject:
-    def __init__(self, user, data, message):
-        self.from_user = user
-        self.data = data
-        self.message = message
