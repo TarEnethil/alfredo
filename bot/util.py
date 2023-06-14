@@ -40,7 +40,7 @@ def format_user(user):
 
 
 def get_version():
-    return "0.2 'Bavadin'"
+    return "0.3 'Cusicesh'"
 
 
 def emoji(emo):
