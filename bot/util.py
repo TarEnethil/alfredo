@@ -26,7 +26,14 @@ reminders = [
     "Hunger? Muss nicht sein, meld' dich jetzt an!",
     "Letzte Chance für nette Fettigkeiten oder fette Nettigkeiten!",
     "Morgen gibt's mal wieder Pizza...",
-    "Hast du auch von Pizza geträumt? Bei Alfredo werden morgen Träume Wirklichkeit!"
+    "Hast du auch von Pizza geträumt? Bei Alfredo werden morgen Träume Wirklichkeit!",
+    "Heute Kreuz da lassen, morgen Essen fassen.",
+    "Heute votieren -> morgen schnabulieren.",
+    "Domani ci sarà la pizza.",
+    "Heute optieren -> morgen soupieren",
+    "Einmal werden wir noch wach, Heißa, dann ist Pizzatag.",
+    "Viva la Margherita! Hoch die Calzone! Feuer und Flamme dem Holzkohleofen!",
+    "Magenknurren? Muss nicht sein, schreib dich jetzt noch ein."
 ]
 
 
